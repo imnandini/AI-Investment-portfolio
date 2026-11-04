@@ -90,6 +90,8 @@ Ownership indexes and foreign keys are required. Every user-facing query filters
 
 **Current boundary:** Portfolio endpoints accept manual entries and CSV imports. Prices are user-supplied reference inputs until an authorized financial provider is selected. External-account connections are not implemented. The local signing key in `.env.example` is for development only.
 
+**Day 9: frontend foundation.** `frontend/` contains the Vite, React, TypeScript, and Tailwind application shell, client-side routes, a typed API client, and explicit loading, error, and empty states. The overview checks `/health`; the portfolio and research routes are intentionally empty until their later milestones. The backend allows the two local Vite origins by default through `CORS_ORIGINS`; deployments should set that list to their actual frontend origins. Start the UI with `npm install` and `npm run dev` from `frontend/`.
+
 ## Main technical risks and controls
 
 - **Unlicensed, stale, or incomplete financial data:** select providers only after checking official terms and coverage; stamp values with provider, reporting period, currency, and as-of time; mark unavailable/stale data rather than fabricating values.

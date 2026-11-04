@@ -25,6 +25,17 @@ uvicorn app.main:app --reload
 
 Open `http://127.0.0.1:8000/health` for the liveness response and `http://127.0.0.1:8000/docs` for the API schema.
 
+Start the frontend in a second PowerShell window after installing Node.js (Node 20.19+ or 22.12+):
+
+```powershell
+cd frontend
+Copy-Item .env.example .env.local
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:5173`. The frontend checks `GET /health` on startup. Set `VITE_API_BASE_URL` in `frontend/.env.local` to point at another API host; add its frontend origin to `CORS_ORIGINS` in the root `.env` when it differs from the local defaults. The portfolio and research routes currently show honest empty states while their data experiences are built in later milestones.
+
 Install `requirements-dev.txt` and run `python -m pytest` from `backend/` to run the CSV and analytics checks.
 
 The app loads typed settings from environment variables (or the root `.env` file), creates its SQLAlchemy engine during application startup, and disposes it during shutdown. `/health` remains a process liveness check and does not require a database connection.
@@ -44,4 +55,4 @@ Holdings can be imported with `POST /portfolios/{portfolio_id}/holdings/import` 
 
 ## Current scope
 
-Days 1–8 provide the architecture and source-access findings, service health endpoint, typed configuration, local PostgreSQL/pgvector setup, user/portfolio/instrument/holding schema and migrations, token authentication, user-scoped portfolio and holdings APIs, CSV import validation, deterministic portfolio analytics, and an authenticated analytics endpoint. Financial providers, RAG, MCP integration, and UI remain subsequent milestones. The app does not return sample investment figures or connect to an account.
+Days 1–9 provide the architecture and source-access findings, service health endpoint, typed configuration, local PostgreSQL/pgvector setup, user/portfolio/instrument/holding schema and migrations, token authentication, user-scoped portfolio and holdings APIs, CSV import validation, deterministic portfolio analytics, an authenticated analytics endpoint, and the React/TypeScript frontend foundation with routing, API connectivity, and loading/error/empty states. Financial providers, RAG, MCP integration, and full portfolio/research UI remain subsequent milestones. The app does not return sample investment figures or connect to an account.
