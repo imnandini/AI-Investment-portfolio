@@ -1,6 +1,7 @@
-import { Activity, ArrowUpRight, BookOpenText, BriefcaseBusiness, CircleHelp, Command, LayoutDashboard, Sparkles } from "lucide-react";
+import { Activity, ArrowUpRight, BookOpenText, BriefcaseBusiness, CircleHelp, Command, LayoutDashboard, LogOut, Sparkles } from "lucide-react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { ApiStatus } from "../../components/ApiStatus";
+import { useAuth } from "../AuthContext";
 
 const links = [
   { to: "/", label: "Overview", icon: LayoutDashboard, end: true },
@@ -10,6 +11,7 @@ const links = [
 
 export function AppLayout() {
   const location = useLocation();
+  const { user, signOut } = useAuth();
   const currentPage = links.find((link) => link.to === location.pathname)?.label ?? "Page";
   return (
     <div className="app-frame">
@@ -29,9 +31,9 @@ export function AppLayout() {
         </nav>
         <div className="sidebar-bottom">
           <div className="sidebar-note"><span className="note-icon"><CircleHelp size={16} /></span><div><b>Research with clarity</b><p>Every insight should show its source.</p></div></div>
-          <a className="profile" href="mailto:hello@example.com" onClick={(event) => event.preventDefault()}>
-            <span className="avatar">N</span><span className="profile-copy"><b>Your workspace</b><small>Personal account</small></span><ArrowUpRight size={15} className="profile-arrow" />
-          </a>
+          {user ? <button className="profile profile-button" type="button" onClick={signOut} title="Sign out">
+            <span className="avatar">{user.email.slice(0, 1).toUpperCase()}</span><span className="profile-copy"><b>{user.email}</b><small>Sign out</small></span><LogOut size={14} className="profile-arrow" />
+          </button> : <div className="profile"><span className="avatar">N</span><span className="profile-copy"><b>Your workspace</b><small>Private account</small></span></div>}
         </div>
       </aside>
 

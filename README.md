@@ -34,7 +34,7 @@ npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`. The frontend checks `GET /health` on startup. Set `VITE_API_BASE_URL` in `frontend/.env.local` to point at another API host; add its frontend origin to `CORS_ORIGINS` in the root `.env` when it differs from the local defaults. The portfolio and research routes currently show honest empty states while their data experiences are built in later milestones.
+Open `http://127.0.0.1:5173`. The frontend checks `GET /health` on startup. Sign in or create an account, then create a portfolio and import a UTF-8 CSV using the supplied template. The dashboard and portfolio page show backend-calculated cost basis, asset/sector allocation, position rows, and price freshness. Market value and P/L remain blank until usable prices are supplied through the analytics API. Set `VITE_API_BASE_URL` in `frontend/.env.local` to point at another API host; add its frontend origin to `CORS_ORIGINS` in the root `.env` when it differs from the local defaults. Company research remains an explicit empty state until authorized data sources are connected.
 
 Install `requirements-dev.txt` and run `python -m pytest` from `backend/` to run the CSV and analytics checks.
 
@@ -55,4 +55,4 @@ Holdings can be imported with `POST /portfolios/{portfolio_id}/holdings/import` 
 
 ## Current scope
 
-Days 1–9 provide the architecture and source-access findings, service health endpoint, typed configuration, local PostgreSQL/pgvector setup, user/portfolio/instrument/holding schema and migrations, token authentication, user-scoped portfolio and holdings APIs, CSV import validation, deterministic portfolio analytics, an authenticated analytics endpoint, and the React/TypeScript frontend foundation with routing, API connectivity, and loading/error/empty states. Financial providers, RAG, MCP integration, and full portfolio/research UI remain subsequent milestones. The app does not return sample investment figures or connect to an account.
+Days 1–10 provide the architecture and source-access findings, service health endpoint, typed configuration, local PostgreSQL/pgvector setup, user/portfolio/instrument/holding schema and migrations, token authentication, user-scoped portfolio and holdings APIs, CSV import validation, deterministic portfolio analytics, an authenticated analytics endpoint, and a React/TypeScript UI with account sign-in, portfolio creation, holdings CSV import, calculated position summaries, cost-basis allocation visualizations, loading/error/empty states, and explicit price freshness. Financial providers, RAG, MCP integration, and company research UI remain subsequent milestones. The app does not return sample investment figures or connect to an account.
