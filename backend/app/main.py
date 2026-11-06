@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.health import router as health_router
 from app.api.analytics import router as analytics_router
 from app.api.auth import router as auth_router
+from app.api.financial_data import router as financial_data_router
 from app.api.holdings import router as holdings_router
 from app.api.portfolios import router as portfolios_router
 from app.core.config import get_settings
@@ -46,5 +47,6 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(analytics_router)
 app.include_router(auth_router)
+app.include_router(financial_data_router)
 app.include_router(portfolios_router)
 app.include_router(holdings_router)
