@@ -1,6 +1,6 @@
 # Indian market data and disclosure sources
 
-**Decision record — 5 November 2026; provider boundary implemented — 6 November 2026**  
+**Decision record — 5 November 2026; provider disabled by product decision — 6 November 2026**
 **Status: no market-data provider selected; continue with manual prices and CSV holdings.**
 
 This review supports a single-user research prototype that may become a multi-user product. A documented API and an account holder's access do not by themselves establish the right for this application to store, transform, or display the data to its users. No provider is enabled in the code.
