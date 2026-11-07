@@ -1,0 +1,6 @@
+{"id":"revenue","query":"What does AAA say about revenue?","company":"AAA","expected":["aaa-annual"],"documents":[{"key":"aaa-annual","company":"AAA","period":"FY2026","text":"SYNTHETIC EVALUATION DATA. AAA revenue increased from 100 to 120 units. Profit was 20 units. Debt remains a liquidity risk."},{"key":"bbb-annual","company":"BBB","period":"FY2026","text":"SYNTHETIC EVALUATION DATA. BBB revenue was 90 units. Demand risk increased."},{"key":"aaa-disclosure","company":"AAA","period":"FY2025","text":"SYNTHETIC EVALUATION DATA. The board appointed a new director. No financial forecasts are included."}]}
+{"id":"risk","query":"liquidity debt risk","company":"AAA","expected":["aaa-annual"]}
+{"id":"company-filter","query":"revenue demand risk","company":"BBB","expected":["bbb-annual"]}
+{"id":"period-filter","query":"director board","company":"AAA","period":"FY2025","expected":["aaa-disclosure"]}
+{"id":"outside-corpus","query":"zebra astrophysics","company":"AAA","expected":[]}
+{"id":"empty-company","query":"revenue","company":"CCC","expected":[]}

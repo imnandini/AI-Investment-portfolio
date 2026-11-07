@@ -10,6 +10,7 @@ from app.analytics.portfolio import calculate_portfolio_analytics
 from app.api.auth import CurrentUser
 from app.db.session import get_session
 from app.services.portfolios import PortfolioNotFoundError, get_portfolio
+from app.services.prices import saved_prices
 
 
 router = APIRouter(prefix="/portfolios/{portfolio_id}/analytics", tags=["analytics"])
@@ -44,6 +45,8 @@ def read_analytics(
     if unknown:
         raise HTTPException(status_code=422, detail="A supplied price does not match a holding in this portfolio.")
     try:
-        return calculate_portfolio_analytics(portfolio, payload.prices)
+        prices = {(p.symbol, p.exchange): p for p in saved_prices(session, portfolio_id)}
+        prices.update({(p.symbol, p.exchange): p for p in payload.prices})
+        return calculate_portfolio_analytics(portfolio, list(prices.values()))
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from None

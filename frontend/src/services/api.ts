@@ -71,10 +71,15 @@ export function apiDelete(path: string) {
   return request<void>(path, { method: "DELETE" });
 }
 
-export function apiUpload<T>(path: string, file: File) {
+export function apiUpload<T>(path: string, file: File, metadata?: unknown) {
   const body = new FormData();
   body.append("file", file);
+  if (metadata !== undefined) body.append("metadata", JSON.stringify(metadata));
   return request<T>(path, { method: "POST", body });
+}
+
+export function apiPut<T>(path: string, body: unknown) {
+  return request<T>(path, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 }
 
 export function getHealth(signal?: AbortSignal) {

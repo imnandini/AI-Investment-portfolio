@@ -6,6 +6,9 @@ venv/
 .pytest_cache/
 .coverage
 htmlcov/
+.tools/
+playwright-report/
+test-results/
 
 # Environment and local data
 .env

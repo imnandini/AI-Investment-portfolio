@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { AlertCircle, BriefcaseBusiness, Check, FileUp, LoaderCircle, Plus, RefreshCw, Upload, X } from "lucide-react";
 import { AuthGate } from "../components/AuthGate";
+import { ManualPrices } from "../components/ManualPrices";
 import { AllocationList, formatMoney, formatQuantity } from "../components/AllocationList";
 import { apiGet, apiPost, apiUpload, type Holding, type ImportResult, type Portfolio, type PortfolioAnalytics } from "../services/api";
 
@@ -160,6 +161,7 @@ function PortfolioWorkspace() {
         </tbody></table></div>}
       </section>
       <p className="portfolio-methodology">{analytics?.methodology}</p>
+      <ManualPrices key={selectedId} portfolioId={selectedId} holdings={holdings} onSaved={reload} />
     </>}
   </div>;
 }

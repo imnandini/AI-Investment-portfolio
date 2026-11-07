@@ -32,6 +32,8 @@ def calculate_portfolio_analytics(
     """
     price_map: dict[tuple[str, str], PriceInput] = {}
     for price in prices or []:
+        if price.as_of and price.as_of > datetime.now(timezone.utc) + timedelta(minutes=5):
+            raise ValueError("Price as-of cannot be in the future.")
         key = (price.symbol.strip().upper(), price.exchange.strip().upper())
         if key in price_map:
             raise ValueError(f"Duplicate price supplied for {key[0]} on {key[1]}.")
@@ -107,7 +109,7 @@ def calculate_portfolio_analytics(
             )
         )
 
-    priced_count = sum(p.current_price is not None for p in positions)
+    priced_count = sum(p.price_status == "available" for p in positions)
     complete = bool(holdings) and priced_count == len(holdings) and all_markets_base
     base_cost_total = _money(cost_total) if holdings and all_costs_base else None
     base_market_total = _money(market_total) if complete else None

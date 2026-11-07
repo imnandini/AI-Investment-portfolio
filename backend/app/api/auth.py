@@ -83,3 +83,10 @@ def login(
 @router.get("/me", response_model=UserRead)
 def read_current_user(current_user: CurrentUser) -> User:
     return current_user
+
+
+@router.delete("/me", status_code=204)
+def delete_account(current_user: CurrentUser, session: SessionDep):
+    """Permanently remove the account and its owned records via FK cascades."""
+    session.delete(current_user)
+    session.commit()

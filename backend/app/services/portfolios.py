@@ -40,6 +40,7 @@ def get_portfolio(session: Session, user_id: UUID, portfolio_id: UUID) -> Portfo
         select(Portfolio)
         .where(Portfolio.id == portfolio_id, Portfolio.user_id == user_id)
         .options(selectinload(Portfolio.holdings).selectinload(Holding.instrument))
+        .execution_options(populate_existing=True)
     )
     portfolio = session.scalar(statement)
     if portfolio is None:

@@ -1,0 +1,2 @@
+# Optional local semantic embeddings/reranking. Provision models separately.
+sentence-transformers>=5,<6

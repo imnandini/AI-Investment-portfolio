@@ -1,0 +1,19 @@
+{
+  "measured_at": "2026-11-07T11:11:09.848786+00:00",
+  "scope": "real Docker PostgreSQL/pgvector + HTTP API + official MCP SDK stdio",
+  "checks": {
+    "csv_import": true,
+    "postgres_pdf_vector_index": true,
+    "postgres_hybrid_retrieval": true,
+    "persisted_price_analytics": true,
+    "review_graph_history": true,
+    "mcp_discovery_typed_read_only": true,
+    "mcp_list_portfolios": true,
+    "mcp_portfolio_summary": true,
+    "mcp_search_research": true,
+    "mcp_company_profile": true,
+    "mcp_object_access_denied": true,
+    "backend_mcp_client_route": true,
+    "disposable_account_deleted": true
+  }
+}

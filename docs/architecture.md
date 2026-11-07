@@ -100,6 +100,8 @@ Ownership indexes and foreign keys are required. Every user-facing query filters
 
 ## Main technical risks and controls
 
+The milestone descriptions above record the foundation as it was built. Days 13–30 now add persisted provider caches/manual prices, a company research/library UI, PDF extraction/chunking, PostgreSQL full-text and pgvector indexes, bounded hybrid retrieval and extractive answers, official-SDK read-only MCP tools/client, a bounded LangGraph review with saved reports, portfolio-scoped chat and UI, deletion and privacy controls, evaluation and Docker deployment. [Acceptance](acceptance.md) is the current feature/check matrix; [RAG](rag_pipeline.md), [MCP](mcp_design.md), [security](security.md) and [demo setup](demo_guide.md) describe the implemented behavior. The local model baseline is lexical feature hashing, and no generative LLM or licensed vendor is configured. Optional semantic/cross-encoder loading requires operator-provisioned models and further evaluation.
+
 - **Unlicensed, stale, or incomplete financial data:** select providers only after checking official terms and coverage; stamp values with provider, reporting period, currency, and as-of time; mark unavailable/stale data rather than fabricating values.
 - **Cross-user portfolio disclosure:** derive user identity from verified auth, enforce ownership in services/queries, and test manipulated object IDs in the API phase.
 - **Incorrect return claims:** start with quantity/cost-basis unrealized P&L; label assumptions and exclude time-weighted or money-weighted return claims unless all required cash flows and methodology exist.

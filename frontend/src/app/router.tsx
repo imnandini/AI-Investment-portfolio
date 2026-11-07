@@ -4,6 +4,8 @@ import { DashboardPage } from "../pages/Dashboard";
 import { PortfolioPage } from "../pages/Portfolio";
 import { ResearchPage } from "../pages/Research";
 import { NotFoundPage } from "../pages/NotFound";
+import { ResearchChatPage } from "../pages/ResearchChat";
+import { PortfolioReviewPage } from "../pages/PortfolioReview";
 
 export const router = createBrowserRouter([
   {
@@ -14,6 +16,8 @@ export const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: "portfolios", element: <PortfolioPage /> },
       { path: "research", element: <ResearchPage /> },
+      { path: "chat", element: <ResearchChatPage /> },
+      { path: "reviews", element: <PortfolioReviewPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

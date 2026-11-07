@@ -31,6 +31,13 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
     financial_data_provider: str = "none"
     financial_data_timeout_seconds: float = 5.0
+    embedding_provider: Literal["hash", "sentence_transformers", "none"] = "hash"
+    embedding_model_path: str = ""
+    reranker_model_path: str = ""
+    chunk_size: int = 1600
+    chunk_overlap: int = 200
+    request_limit_per_minute: int = 120
+    internal_api_url: str = "http://127.0.0.1:8000"
 
     @model_validator(mode="after")
     def validate_production_secrets(self) -> "Settings":
@@ -45,6 +52,12 @@ class Settings(BaseSettings):
             raise ValueError("FINANCIAL_DATA_PROVIDER cannot be blank.")
         if not 0 < self.financial_data_timeout_seconds <= 60:
             raise ValueError("FINANCIAL_DATA_TIMEOUT_SECONDS must be greater than 0 and at most 60.")
+        if not 400 <= self.chunk_size <= 4000 or not 0 <= self.chunk_overlap < self.chunk_size // 2:
+            raise ValueError("Chunk size must be 400–4000 and overlap less than half the size.")
+        if self.embedding_provider == "sentence_transformers" and not self.embedding_model_path:
+            raise ValueError("Sentence transformers requires a local EMBEDDING_MODEL_PATH.")
+        if not 10 <= self.request_limit_per_minute <= 10000:
+            raise ValueError("Request limit must be between 10 and 10000 per minute.")
         return self
 
 

@@ -1,0 +1,93 @@
+{
+  "measured_at": "2026-11-07T11:09:44.424745+00:00",
+  "dataset_sha256": "45f080316103e3cfcc6383b8e166d0d58ceedc6aa38411c30236441bfe1688f2",
+  "dataset_version": "synthetic-v1",
+  "environment": {
+    "python": "3.14.0",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "sqlalchemy": "2.0.44"
+  },
+  "method": "hash-lexical-v1-384 + keyword + RRF, SQLite reference path",
+  "cases": [
+    {
+      "id": "revenue",
+      "retrieved": [
+        "aaa-annual"
+      ],
+      "expected": [
+        "aaa-annual"
+      ],
+      "citation_check": true,
+      "abstention_check": true,
+      "latency_ms": 6.617
+    },
+    {
+      "id": "risk",
+      "retrieved": [
+        "aaa-annual"
+      ],
+      "expected": [
+        "aaa-annual"
+      ],
+      "citation_check": true,
+      "abstention_check": true,
+      "latency_ms": 0.949
+    },
+    {
+      "id": "company-filter",
+      "retrieved": [
+        "bbb-annual"
+      ],
+      "expected": [
+        "bbb-annual"
+      ],
+      "citation_check": true,
+      "abstention_check": true,
+      "latency_ms": 0.687
+    },
+    {
+      "id": "period-filter",
+      "retrieved": [
+        "aaa-disclosure"
+      ],
+      "expected": [
+        "aaa-disclosure"
+      ],
+      "citation_check": true,
+      "abstention_check": true,
+      "latency_ms": 2.265
+    },
+    {
+      "id": "outside-corpus",
+      "retrieved": [],
+      "expected": [],
+      "citation_check": true,
+      "abstention_check": true,
+      "latency_ms": 0.772
+    },
+    {
+      "id": "empty-company",
+      "retrieved": [],
+      "expected": [],
+      "citation_check": true,
+      "abstention_check": true,
+      "latency_ms": 0.473
+    }
+  ],
+  "metrics": {
+    "recall_at_5": 1.0,
+    "mrr": 1.0,
+    "citation_checks_passed": 6,
+    "abstention_checks_passed": 6,
+    "case_count": 6,
+    "median_latency_ms": 0.861,
+    "max_latency_ms": 6.617,
+    "external_model_calls": 0,
+    "external_model_cost": 0
+  },
+  "limitations": [
+    "Small synthetic corpus; not a measure of real financial research quality.",
+    "No semantic model or cross-encoder evaluated.",
+    "Latency excludes PDF extraction and does not establish a production SLA."
+  ]
+}

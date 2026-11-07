@@ -10,3 +10,4 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <AuthProvider><RouterProvider router={router} /></AuthProvider>
   </React.StrictMode>,
 );
+import "./research.css";

@@ -53,7 +53,7 @@ def test_missing_and_mismatched_prices_remain_explicit():
     assert missing.concentration_index is None
 
     mismatch = calculate_portfolio_analytics(portfolio, [
-        PriceInput(symbol="AAA", price=Decimal("12"), currency="USD"),
+        PriceInput(symbol="AAA", exchange="NSE", price=Decimal("12"), currency="USD"),
     ])
     assert mismatch.positions[0].price_status == "currency_mismatch"
     assert mismatch.positions[0].market_value is None
@@ -67,7 +67,7 @@ def test_stale_and_unknown_freshness_do_not_produce_complete_market_metrics():
     )
     portfolio = SimpleNamespace(id=uuid4(), base_currency="INR", holdings=[holding])
     stale = calculate_portfolio_analytics(portfolio, [
-        PriceInput(symbol="AAA", price=Decimal("12"), currency="INR", as_of=datetime(2020, 1, 1, tzinfo=timezone.utc)),
+        PriceInput(symbol="AAA", exchange="NSE", price=Decimal("12"), currency="INR", as_of=datetime(2020, 1, 1, tzinfo=timezone.utc)),
     ])
     assert stale.positions[0].price_status == "stale"
     assert stale.positions[0].market_value == Decimal("36.00")
@@ -75,7 +75,7 @@ def test_stale_and_unknown_freshness_do_not_produce_complete_market_metrics():
     assert stale.complete is False
 
     unknown = calculate_portfolio_analytics(portfolio, [
-        PriceInput(symbol="AAA", price=Decimal("12"), currency="INR"),
+        PriceInput(symbol="AAA", exchange="NSE", price=Decimal("12"), currency="INR"),
     ])
     assert unknown.positions[0].price_status == "unknown_freshness"
     assert unknown.market_value_total is None
@@ -83,7 +83,7 @@ def test_stale_and_unknown_freshness_do_not_produce_complete_market_metrics():
 
 def test_duplicate_price_inputs_are_rejected():
     portfolio = SimpleNamespace(id=uuid4(), base_currency="INR", holdings=[])
-    price = PriceInput(symbol="AAA", price=Decimal("12"), currency="INR")
+    price = PriceInput(symbol="AAA", exchange="NSE", price=Decimal("12"), currency="INR")
     with pytest.raises(ValueError, match="Duplicate price"):
         calculate_portfolio_analytics(portfolio, [price, price])
 
@@ -95,7 +95,7 @@ def test_single_position_is_fully_concentrated_and_zero_quantity_is_rejected():
     )
     portfolio = SimpleNamespace(id=uuid4(), base_currency="INR", holdings=[holding])
     result = calculate_portfolio_analytics(portfolio, [
-        PriceInput(symbol="AAA", price=Decimal("50"), currency="INR", as_of=datetime.now(timezone.utc)),
+        PriceInput(symbol="AAA", exchange="NSE", price=Decimal("50"), currency="INR", as_of=datetime.now(timezone.utc)),
     ])
     assert result.largest_holding_allocation_pct == Decimal("100.00")
     assert result.concentration_index == Decimal("10000.00")

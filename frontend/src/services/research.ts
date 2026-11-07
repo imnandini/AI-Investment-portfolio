@@ -1,0 +1,4 @@
+export type DocumentRecord = { id: string; title: string; company: string; kind: string; period: string | null; publication_date: string | null; source_url: string | null; page_count: number; status: string; error: string | null; created_at: string };
+export type Evidence = { chunk_id: string; document_id: string; title: string; company: string; page: number; period: string | null; publication_date: string | null; source_url: string | null; text: string; score: number };
+export type Answer = { status: string; answer: string; evidence: Evidence[]; limitations: string[]; activities: string[]; method: string };
+export type Chat = { id: string; question: string; created_at: string; response: Answer & { portfolio_context: { name: string; position_count: number; cost_basis: string | null; currency: string; price_coverage: string; complete: boolean } } };

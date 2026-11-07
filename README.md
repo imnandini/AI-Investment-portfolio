@@ -1,15 +1,21 @@
-﻿# AI Investment Research & Portfolio Copilot
+# AI Investment Research & Portfolio Copilot
 
 An explainable portfolio research application. It combines deterministic portfolio calculations, sourced financial data, document retrieval, and bounded AI workflows. It is a research and risk-analysis aid, not an automated investment adviser.
 
 ## Local setup
 
+For the complete local application, start Docker Desktop and run `docker compose up -d --build` from this directory. Open **http://127.0.0.1:8080**. The backend applies migrations automatically. Keep your existing `.env`; use `.env.example` only when setting up a new environment.
+
+The remaining roadmap workflows are now implemented: cached provider provenance, manual price entry, private PDF ingestion and hybrid retrieval, page citations, a typed read-only MCP server/client, a bounded LangGraph review, saved reports, portfolio-aware extractive chat, deletion controls, tests, and container deployment. See [acceptance and remaining gates](docs/acceptance.md), the [demo guide](docs/demo_guide.md), [research pipeline](docs/rag_pipeline.md), [MCP design](docs/mcp_design.md), and [interview guide](docs/interview_guide.md).
+
+The default path runs without model/API keys. It uses lexical vectors and quoted source passages. Licensed market feeds, INDmoney access, and optional local semantic/reranking models require separate provisioning; they are not reported as connected.
+
 The initial architecture and implementation sequence are in [docs/architecture.md](docs/architecture.md). The daily execution plan is in `outputs/roadmap/AI_Investment_Copilot_Project_Plan.xlsx`.
 
-Copy `.env.example` to `.env`, then start the local PostgreSQL/pgvector service from the repository root:
+For native development, create `.env` only if it is missing, then start the local PostgreSQL/pgvector service from the repository root:
 
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 docker compose up -d db
 ```
 
@@ -25,7 +31,7 @@ uvicorn app.main:app --reload
 
 Open `http://127.0.0.1:8000/health` for the liveness response and `http://127.0.0.1:8000/docs` for the API schema.
 
-Start the frontend in a second PowerShell window after installing Node.js (Node 20.19+ or 22.12+):
+Start the frontend in a second PowerShell window after installing Node.js 24+:
 
 ```powershell
 cd frontend
@@ -34,7 +40,7 @@ npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`. The frontend checks `GET /health` on startup. Sign in or create an account, then create a portfolio and import a UTF-8 CSV using the supplied template. The dashboard and portfolio page show backend-calculated cost basis, asset/sector allocation, position rows, and price freshness. Market value and P/L remain blank until usable prices are supplied through the analytics API. Set `VITE_API_BASE_URL` in `frontend/.env.local` to point at another API host; add its frontend origin to `CORS_ORIGINS` in the root `.env` when it differs from the local defaults. Company research remains an explicit empty state until authorized data sources are connected.
+Open `http://127.0.0.1:5173`. The frontend checks `GET /health` on startup. Sign in or create an account, then create a portfolio and import a UTF-8 CSV using the supplied template. The dashboard and portfolio page show backend-calculated cost basis, asset/sector allocation, position rows, and price freshness. Market value and P/L remain blank until usable prices are supplied through the analytics API. Set `VITE_API_BASE_URL` in `frontend/.env.local` to point at another API host; add its frontend origin to `CORS_ORIGINS` in the root `.env` when it differs from the local defaults. Company research supports uploaded PDFs and cited search; provider facts remain unavailable until an authorized source is connected.
 
 Install `requirements-dev.txt` and run `python -m pytest` from `backend/` to run the CSV and analytics checks.
 
@@ -53,6 +59,6 @@ Holdings can be imported with `POST /portfolios/{portfolio_id}/holdings/import` 
 
 `POST /portfolios/{portfolio_id}/analytics` returns cost basis, market value, unrealized P/L, allocation, asset/sector mix, and concentration metadata. Provide optional manual prices as `{"prices":[{"symbol":"INFY","exchange":"NSE","price":"1600.00","currency":"INR","as_of":"2026-11-03T10:00:00Z"}]}`. Without a matching fresh price, market totals and allocation remain incomplete. Prices older than seven days or without an as-of timestamp are excluded from aggregate market metrics. There is no price provider or FX conversion yet.
 
-## Current scope
+## Foundation history
 
-Days 1–12 provide the architecture and source-access findings, service health endpoint, typed configuration, local PostgreSQL/pgvector setup, user/portfolio/instrument/holding schema and migrations, token authentication, user-scoped portfolio and holdings APIs, CSV import validation, deterministic portfolio analytics, an authenticated analytics endpoint, a React/TypeScript UI with account sign-in, portfolio creation, CSV import, calculated summaries and allocation views, and a typed financial-data provider interface with authenticated lookup routes and explicit unavailable states. The provider review and remaining authorization gate are documented in [docs/data_sources.md](docs/data_sources.md); no live vendor is enabled until its terms cover the app's display and storage. Manual prices remain supported. RAG, MCP integration, company research UI, and a licensed vendor adapter remain subsequent work. The app does not return sample investment figures or connect to a broker account.
+Days 1–12 established authentication, portfolio/holding management, CSV imports, Decimal analytics, the dashboard, and the no-provider contract. Subsequent implementation and verification are tracked in [docs/acceptance.md](docs/acceptance.md). The source-access decision in [docs/data_sources.md](docs/data_sources.md) still applies: no live vendor is enabled until its terms cover the app's display and storage.

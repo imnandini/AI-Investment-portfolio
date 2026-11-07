@@ -1,4 +1,4 @@
-import { Activity, ArrowUpRight, BookOpenText, BriefcaseBusiness, CircleHelp, Command, LayoutDashboard, LogOut, Sparkles } from "lucide-react";
+import { Activity, BookOpenText, BriefcaseBusiness, CircleHelp, Command, LayoutDashboard, LogOut, Sparkles } from "lucide-react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { ApiStatus } from "../../components/ApiStatus";
 import { useAuth } from "../AuthContext";
@@ -7,6 +7,8 @@ const links = [
   { to: "/", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/portfolios", label: "Portfolios", icon: BriefcaseBusiness },
   { to: "/research", label: "Research", icon: BookOpenText },
+  { to: "/chat", label: "Research chat", icon: Command },
+  { to: "/reviews", label: "Portfolio reviews", icon: Activity },
 ];
 
 export function AppLayout() {
