@@ -18,6 +18,7 @@ from app.db.session import get_session
 from app.main import app
 from app.models.portfolio import Portfolio
 from app.models.user import User
+from app.middleware.security import SecurityMiddleware
 
 
 @pytest.fixture
@@ -51,5 +52,12 @@ def api_context(db_session: Session):
     app.dependency_overrides[get_settings] = lambda: settings
     token = create_access_token(user.id, settings)
     with TestClient(app) as client:
+        # Each API test has a fresh database and request budget. FastAPI reuses
+        # its middleware stack across TestClient lifespans in this process.
+        middleware = app.middleware_stack
+        while middleware is not None:
+            if isinstance(middleware, SecurityMiddleware):
+                middleware.requests.clear()
+            middleware = getattr(middleware, "app", None)
         yield client, user, portfolio, {"Authorization": f"Bearer {token}"}, db_session
     app.dependency_overrides.clear()

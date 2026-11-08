@@ -16,15 +16,17 @@ from app.schemas.research import SearchRequest
 from app.services.indmoney import list_balances
 from app.services.prices import require_portfolio, saved_prices
 
+METRIC_MODIFIERS = r"(?:\s+(?:is|was|has|have|had|after|before|tax|net|quarterly|annual|operating|adjusted|consolidated|standalone|in|q[1-4])){0,4}\s+"
 POSITIVE = [
-    ("Earnings growth reported", r"\b(?:profit|earnings|revenue|sales)\b.{0,25}\b(?:rise[sn]?|rising|rose|grew|growth|surge[sd]?|jump[sd]?|increase[sd]?|up)\b", "Check whether growth also appears in margins, operating cash flow and the latest company filing."),
+    ("Earnings growth reported", r"\b(?:profits?|earnings|revenues?|sales)\b" + METRIC_MODIFIERS + r"(?:rise[sn]?|rising|rose|grew|grows?|surge[sd]?|jump[sd]?|increase[sd]?|climbs?|up)\b", "Check whether growth also appears in margins, operating cash flow and the latest company filing."),
     ("New business reported", r"\b(?:wins?|bags?|secures?|awarded)\b.{0,35}\b(?:orders?|contracts?|deals?)\b", "Check contract size, execution timing and how much revenue the order could contribute."),
     ("Debt reduction reported", r"\b(?:cuts?|reduces?|repaid|repays?)\b.{0,15}\bdebt\b|\bdebt\b.{0,15}\b(?:falls?|declines?|reductions?|free)\b", "Check net debt, cash balances and whether the improvement is recurring."),
 ]
 NEGATIVE = [
-    ("Earnings pressure reported", r"\b(?:profit|earnings|revenue|sales|margins?)\b.{0,25}\b(?:falls?|fell|drops?|declines?|declined|slumps?|down|shrinks?)\b|\b(?:loss|losses)\b.{0,15}\b(?:widens?|widened|surges?|rises?)\b", "Check whether the weakness comes from recurring operations, one-off charges or changes in demand."),
+    ("Earnings pressure reported", r"\b(?:profits?|earnings|revenues?|sales|margins?)\b" + METRIC_MODIFIERS + r"(?:falls?|fell|drops?|declines?|declined|slumps?|down|shrinks?)\b|\b(?:loss|losses)\b" + METRIC_MODIFIERS + r"(?:widens?|widened|surges?|rises?)\b|\b(?:posts?|reports?)\b.{0,15}\bloss\b", "Check whether the weakness comes from recurring operations, one-off charges or changes in demand."),
     ("Regulatory or governance concern reported", r"\b(?:probe|investigation|fraud|penalty|penalties|fined|lawsuit|auditor resigns|regulatory action)\b", "Check the company or regulator's disclosure for scope, materiality and the company's response."),
     ("Financial stress reported", r"\b(?:default|defaults|bankruptcy|insolvency|debt crisis|credit downgrade)\b", "Check repayment obligations, liquidity and the latest credit or exchange disclosures."),
+    ("Business outlook concerns reported", r"\b(?:weaker|weak|cuts?|lowers?|reduced)\b.{0,15}\b(?:outlook|guidance|demand)\b|\b(?:outlook|guidance|demand)\b.{0,15}\b(?:weakens?|weaker|lower|cuts?|reduced)\b", "Check management's guidance, demand assumptions and how the outlook compares with reported results."),
 ]
 
 
@@ -35,7 +37,7 @@ def news_signals(articles, rules):
         for article in articles:
             headline = article["title"].casefold()
             # Denials, hypothetical and negated claims stay in the neutral news list.
-            if re.search(r"\b(?:not|no|denies?|denied|avoids?|without|may|might|could|rumou?r|alleged)\b", headline):
+            if re.search(r"\b(?:not|no|denies?|denied|avoids?|without|may|might|could|rumou?r|alleged|expected|forecast|forecasts|estimates?|projected|likely)\b|\bto (?:rise|grow|fall|surge|increase|decline)\b", headline):
                 continue
             if re.search(pattern, headline):
                 matches.append(article["id"])
@@ -57,12 +59,14 @@ def stock_brief(holding, news, evidence, doc_issue, metrics):
     name = instrument.display_name or instrument.canonical_symbol
     pros = news_signals(news["articles"], POSITIVE)
     cons = news_signals(news["articles"], NEGATIVE)
+    positive_topics = ", ".join(item["title"].removesuffix(" reported").lower() for item in pros)
+    concern_topics = ", ".join(item["title"].removesuffix(" reported").lower() for item in cons)
     if pros and cons:
-        view = "Mixed news signals. Recent coverage includes both potential positives and concerns; compare the cited reports with company filings before forming a stock view."
+        view = f"Mixed news signals for {name}: {positive_topics} alongside {concern_topics}. Compare the cited reports with company filings before forming a stock view."
     elif pros:
-        view = "Potential positives appear in recent coverage. The evidence is too narrow to judge valuation or establish that the stock is attractive at its current price."
+        view = f"Potential positives for {name}: recent coverage mentions {positive_topics}. This is too narrow to judge valuation or establish that the stock is attractive at its current price."
     elif cons:
-        view = "Recent coverage flags issues worth investigating. Check their financial impact and the company's response before drawing a conclusion about the stock."
+        view = f"Recent coverage of {name} flags {concern_topics}. Check their financial impact and the company's response before drawing a conclusion about the stock."
     else:
         view = "There is not enough directional evidence for a supported stock opinion. Read the matched news and company disclosures; an absence of flagged concerns does not establish safety."
     key = (instrument.canonical_symbol, instrument.exchange)
@@ -144,7 +148,7 @@ async def portfolio_brief(session, settings, user_id, portfolio_id):
     if flagged:
         concerns.append("Recent news contains concern signals for " + ", ".join(flagged[:5]) + ". See the source-linked stock briefs below.")
     if known and max(weight for _, weight in known) > Decimal(25):
-        view = "Concentration deserves attention. A large share sits in one security, so that company's results can strongly influence this portfolio."
+        view = f"Concentration deserves attention. {label} accounts for {weight}% of security {basis}, so that company's results can strongly influence this portfolio."
     elif not metrics.complete:
         view = "The portfolio view is incomplete. Fresh prices and sector information are needed to judge current concentration and diversification."
     else:

@@ -32,10 +32,14 @@ export function ResearchBriefPanel({ portfolioId, holdingId, name, onClose }: { 
   const [busy, setBusy] = useState(true);
   const [revision, setRevision] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null);
+  const request = useRef<{ key: string; promise: Promise<ResearchBrief> } | null>(null);
   useEffect(() => {
     let active = true;
     setBusy(true); setError(""); setBrief(null);
-    getBrief(portfolioId, holdingId).then(value => { if (active) setBrief(value); })
+    const key = `${portfolioId}:${holdingId || "portfolio"}:${revision}`;
+    // Share the request across React StrictMode's initial effect replay.
+    if (request.current?.key !== key) request.current = { key, promise: getBrief(portfolioId, holdingId) };
+    request.current.promise.then(value => { if (active) setBrief(value); })
       .catch(cause => { if (active) setError(cause instanceof Error ? cause.message : "The research brief could not load."); })
       .finally(() => { if (active) setBusy(false); });
     heading.current?.focus({ preventScroll: true });

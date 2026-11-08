@@ -1,5 +1,6 @@
 """Bounded, public company-news RSS. Only company names leave the application."""
 from collections import OrderedDict
+import asyncio
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 import html
@@ -57,6 +58,8 @@ def parse_feed(content, name, checked_at):
     articles, seen = [], set()
     for item in root.findall("./channel/item")[:150]:
         title = text(item.findtext("title"), 250)
+        if re.search(r"\b(?:share|stock) price (?:live(?: updates?)?|highlights|history|today)\b", title, re.I):
+            continue
         # Require the company phrase in the headline, not just search ranking.
         words = " ".join(re.findall(r"[a-z0-9]+", title.casefold()))
         if not re.search(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", words):
@@ -87,14 +90,15 @@ def parse_feed(content, name, checked_at):
 
 
 async def fetch_feed(url, params):
-    async with httpx.AsyncClient(timeout=httpx.Timeout(6), follow_redirects=False, headers={"User-Agent": "InvestmentResearchCopilot/1.0"}) as client:
-        async with client.stream("GET", url, params=params) as response:
-            response.raise_for_status()
-            content = bytearray()
-            async for chunk in response.aiter_bytes():
-                content.extend(chunk)
-                if len(content) > MAX_BYTES:
-                    raise ValueError("oversized feed")
+    async with asyncio.timeout(5):
+        async with httpx.AsyncClient(timeout=httpx.Timeout(4), follow_redirects=False, headers={"User-Agent": "InvestmentResearchCopilot/1.0"}) as client:
+            async with client.stream("GET", url, params=params) as response:
+                response.raise_for_status()
+                content = bytearray()
+                async for chunk in response.aiter_bytes():
+                    content.extend(chunk)
+                    if len(content) > MAX_BYTES:
+                        raise ValueError("oversized feed")
     return bytes(content)
 
 
@@ -110,9 +114,10 @@ async def company_news(name, currency="INR"):
         return {"status": "unavailable", "articles": [], "checked_at": checked_at.isoformat(), "cached": False,
                 "note": "A company name is needed for news matching. Reimport this holding to refresh its name."}
     region = "en-IN" if currency == "INR" else "en-US"
+    topics = "(earnings OR profit OR revenue OR orders OR debt OR business OR outlook)"
     providers = [
-        ("Bing News RSS", "https://www.bing.com/news/search", {"q": f'"{query_name}" stock', "format": "rss", "setlang": "en", "mkt": region}),
-        ("Google News RSS", "https://news.google.com/rss/search", {"q": f'"{query_name}" when:30d', "hl": region, "gl": "IN" if currency == "INR" else "US", "ceid": "IN:en" if currency == "INR" else "US:en"}),
+        ("Bing News RSS", "https://www.bing.com/news/search", {"q": f'"{query_name}" {topics}', "format": "rss", "setlang": "en", "mkt": region}),
+        ("Google News RSS", "https://news.google.com/rss/search", {"q": f'"{query_name}" {topics} when:30d', "hl": region, "gl": "IN" if currency == "INR" else "US", "ceid": "IN:en" if currency == "INR" else "US:en"}),
     ]
     succeeded, articles, provider = False, [], None
     for label, url, params in providers:
@@ -122,7 +127,7 @@ async def company_news(name, currency="INR"):
             provider = label
             if articles:
                 break
-        except (httpx.HTTPError, ValueError, ET.ParseError):
+        except (httpx.HTTPError, ValueError, ET.ParseError, TimeoutError):
             continue
     result = {"status": "available" if articles else "empty" if succeeded else "unavailable", "articles": articles,
               "provider": provider, "checked_at": checked_at.isoformat(), "cached": False,

@@ -1,10 +1,12 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { PortfolioPage } from "./Portfolio";
 import { apiGet, apiPost } from "../services/api";
 
 vi.mock("../components/AuthGate", () => ({ AuthGate: ({ children }: { children: React.ReactNode }) => children }));
 vi.mock("../components/IndmoneyConnect", () => ({ IndmoneyConnect: () => null }));
+vi.mock("../components/ResearchBriefPanel", () => ({ ResearchBriefPanel: ({ holdingId }: { holdingId?: string }) => <section aria-label="Research brief">Brief for {holdingId || "portfolio"}</section> }));
 vi.mock("../services/api", () => ({ apiGet: vi.fn(), apiPost: vi.fn(), apiUpload: vi.fn() }));
 afterEach(cleanup);
 
@@ -26,4 +28,9 @@ it("shows company names, clear missing metadata and per-holding research beside 
   expect(url.searchParams.get("name")).toBe("Synthetic Company");
   expect(url.searchParams.has("exchange")).toBe(false);
   expect(screen.getByRole("link", { name: "Research Provident fund" })).toBeTruthy();
+  await userEvent.click(screen.getByRole("button", { name: "Pros, cons and news for Synthetic Company" }));
+  expect(await screen.findByText("Brief for h1")).toBeTruthy();
+  await waitFor(() => expect((screen.getByRole("button", { name: "Portfolio opinion" }) as HTMLButtonElement).disabled).toBe(false));
+  await userEvent.click(screen.getByRole("button", { name: "Portfolio opinion" }));
+  expect(await screen.findByText("Brief for portfolio")).toBeTruthy();
 });
