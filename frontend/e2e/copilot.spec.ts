@@ -19,14 +19,14 @@ test("account, holdings, source search, chat and saved review", async ({ page })
   await page.getByLabel(/Email/i).fill(email);
   await page.getByLabel(/Password/i).fill("synthetic-e2e-password-2026");
   await page.getByRole("button", { name: /Create account/i, exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Your portfolios" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Portfolio overview" })).toBeVisible();
   await page.getByRole("button", { name: "Create portfolio", exact: true }).click();
   await page.getByLabel("Portfolio name").fill("SYNTHETIC demo portfolio");
   await page.getByRole("button", { name: "Create", exact: true }).click();
   await page.locator('input[type="file"]').setInputFiles({ name: "synthetic-holdings.csv", mimeType: "text/csv", buffer: fs.readFileSync(new URL("../../sample_data/synthetic_holdings.csv", import.meta.url)) });
   await expect(page.getByText("1 holding imported.")).toBeVisible();
   await expect(page.getByRole("cell", { name: "AAA NSE · EQUITY · Technology" })).toBeVisible();
-  await page.getByRole("link", { name: "Research", exact: true }).click();
+  await page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Research", exact: true }).click();
   await page.getByLabel("Title", { exact: true }).fill("SYNTHETIC annual report");
   await page.getByLabel("Company / ticker").fill("AAA");
   await page.getByLabel("Reporting period").fill("FY2026");

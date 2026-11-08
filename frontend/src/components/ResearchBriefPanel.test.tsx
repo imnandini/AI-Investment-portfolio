@@ -11,13 +11,14 @@ beforeEach(() => vi.clearAllMocks());
 
 const stock: StockBrief = {
   kind: "stock", holding_id: "h1", name: "Acme Limited", symbol: "INDS0001", generated_at: "2026-11-08T10:00:00Z", view: "Mixed news signals for Acme.",
-  pros: [{ title: "Earnings growth reported", text: "Check cash flows.", source_ids: ["news-1"], basis: "headline_signal" }],
+  pros: [{ title: "Earnings growth reported", text: "Check cash flows.", explanation: "Growth quality depends on margins and cash generation.", source_ids: ["news-1"], basis: "headline_signal" }],
   cons: [{ title: "Regulatory concern reported", text: "Check disclosures.", source_ids: ["news-2"], basis: "headline_signal" }],
   news: { status: "available", checked_at: "2026-11-08T10:00:00Z", cached: false, provider: "Synthetic news", note: "Headlines only", articles: [
     { id: "news-1", title: "Acme profit rises", url: "https://publisher.example/growth", publisher: "Example", published_at: "2026-11-08T09:00:00Z" },
     { id: "news-2", title: "Acme faces probe", url: "https://publisher.example/probe", publisher: "Example", published_at: "2026-11-08T08:00:00Z" },
   ] },
   portfolio_context: { cost_weight_pct: "80", market_weight_pct: null }, evidence: [], questions: ["Is cash flow recurring?"], limitations: ["Headlines are unverified."],
+  analysis: [{ title: "Evidence coverage", text: "Two headlines are research context, not a measure of consensus." }],
 };
 
 it("loads stock pros, cons and recent news without an upload or second click", async () => {
@@ -28,6 +29,9 @@ it("loads stock pros, cons and recent news without an upload or second click", a
   expect(screen.getByRole("heading", { name: "Pros to investigate" })).toBeTruthy();
   expect(screen.getByText("Earnings growth reported")).toBeTruthy();
   expect(screen.getByText("Regulatory concern reported")).toBeTruthy();
+  expect(screen.getByText("Growth quality depends on margins and cash generation.")).toBeTruthy();
+  expect(screen.getByText("Two headlines are research context, not a measure of consensus.")).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "A practical reading plan" })).toBeTruthy();
   const link = screen.getAllByRole("link", { name: "Acme profit rises ↗" })[0];
   expect(link.getAttribute("href")).toBe("https://publisher.example/growth");
   expect(link.getAttribute("rel")).toContain("noreferrer");

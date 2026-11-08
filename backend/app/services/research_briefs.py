@@ -29,6 +29,16 @@ NEGATIVE = [
     ("Business outlook concerns reported", r"\b(?:weaker|weak|cuts?|lowers?|reduced)\b.{0,15}\b(?:outlook|guidance|demand)\b|\b(?:outlook|guidance|demand)\b.{0,15}\b(?:weakens?|weaker|lower|cuts?|reduced)\b", "Check management's guidance, demand assumptions and how the outlook compares with reported results."),
 ]
 
+SIGNAL_CONTEXT = {
+    "Earnings growth reported": "Higher reported sales or earnings can point to stronger demand or improving operations. The quality of that growth depends on whether it recurs, whether margins hold up and whether the business turns accounting earnings into cash.",
+    "New business reported": "A new order or contract may improve visibility into future business. Its value to shareholders depends on execution, margins, payment terms and how large the order is relative to the company's existing revenue.",
+    "Debt reduction reported": "Lower debt can reduce interest costs and refinancing pressure. A stronger balance sheet is more meaningful when debt falls through operating cash generation rather than the sale of assets needed for future growth.",
+    "Earnings pressure reported": "Falling sales, earnings or margins can put pressure on a company's ability to fund investment and meet market expectations. The significance depends on whether the change reflects a temporary disruption, a one-off expense or a lasting weakness in demand.",
+    "Regulatory or governance concern reported": "Regulatory and governance events may affect reputation, management attention, operating permissions or cash flows. A headline alone does not establish wrongdoing or quantify the impact; the underlying disclosure and the company's response are essential context.",
+    "Financial stress reported": "Debt or liquidity stress can affect a company's ability to repay lenders and fund day-to-day operations. The potential impact on equity holders depends on available cash, near-term obligations, lender terms and any proposed restructuring.",
+    "Business outlook concerns reported": "A weaker business outlook may change expectations for future earnings even before reported results deteriorate. The key question is whether management has changed its demand assumptions, cost outlook or investment plans, and how much uncertainty remains.",
+}
+
 
 def news_signals(articles, rules):
     signals = []
@@ -42,7 +52,7 @@ def news_signals(articles, rules):
             if re.search(pattern, headline):
                 matches.append(article["id"])
         if matches:
-            signals.append({"title": title, "text": follow_up, "source_ids": matches, "basis": "headline_signal"})
+            signals.append({"title": title, "text": follow_up, "explanation": SIGNAL_CONTEXT[title], "source_ids": matches, "basis": "headline_signal"})
     return signals
 
 
@@ -79,8 +89,23 @@ def stock_brief(holding, news, evidence, doc_issue, metrics):
         limitations.append(doc_issue)
     if position and position.price_status != "available":
         limitations.append("This holding has no fresh, dated price usable in aggregate market metrics.")
+    if news["articles"]:
+        publishers = len({article["publisher"] for article in news["articles"]})
+        coverage = f"This brief matched {len(news['articles'])} recent headlines from {publishers} named news outlets. Read the linked reports to understand the event, its timing and the company's response. Several publishers may be covering the same event, so headline counts do not measure the strength of an investment case."
+    else:
+        coverage = "The available news feed did not provide usable recent company-matched coverage. This limits the research view: it does not establish that the company has no material developments. The next useful sources are its latest results, exchange disclosures and investor presentations."
+    market_weight = position.market_allocation_pct if position else None
+    cost_weight = position.cost_basis_allocation_pct if position else None
+    if market_weight is not None:
+        position_context = f"{name} represents {market_weight}% of this portfolio's security market value using fresh, currency-matched prices. A larger weight makes changes in this company's share price more influential on the portfolio. Compare that exposure with the role you intended this holding to play."
+    elif cost_weight is not None:
+        position_context = f"{name} accounts for {cost_weight}% of recorded security cost basis. This measures the share of purchase capital assigned to the holding. Its current market weight could differ because prices have changed; a complete, fresh valuation is needed to measure today's exposure."
+    else:
+        position_context = "A complete portfolio weight is unavailable for this holding. Known purchase costs or a complete set of fresh prices are needed before its contribution to total security exposure can be quantified. Review those inputs alongside the company news."
     return {"kind": "stock", "holding_id": str(holding.id), "name": name, "symbol": instrument.canonical_symbol,
             "generated_at": utcnow().isoformat(), "view": view, "pros": pros, "cons": cons,
+            "analysis": [{"title": "How much evidence supports this view?", "text": coverage},
+                         {"title": "What this holding means for your portfolio", "text": position_context}],
             "news": news, "evidence": evidence, "limitations": limitations,
             "portfolio_context": {"cost_weight_pct": str(position.cost_basis_allocation_pct) if position and position.cost_basis_allocation_pct is not None else None,
                                   "market_weight_pct": str(position.market_allocation_pct) if position and position.market_allocation_pct is not None else None},
@@ -158,7 +183,13 @@ async def portfolio_brief(session, settings, user_id, portfolio_id):
         "Investment goals, horizon, income needs, tax position and other assets are unknown. A buy/sell decision cannot be inferred from this brief."]
     if balances:
         limitations.append(f"{len(balances)} PF account balances are displayed separately and excluded from these security weights. This is not a complete household net-worth allocation.")
+    basis_context = "The assessment uses fresh market values to measure each security's share of the portfolio today. Market weights help explain how sensitive the portfolio may be to a price movement in a particular company." if metrics.complete else "The assessment uses recorded purchase costs where a complete cost allocation is available. Cost weights explain where purchase capital was assigned, but they can differ materially from current market weights. Fresh prices are needed before today's market concentration can be measured."
+    scope_context = f"This assessment covers {len(metrics.positions)} saved security positions and checks news for {len(targets)} equity holdings. "
+    scope_context += f"Your {len(balances)} PF account balances remain visible separately. " if balances else "No imported PF account balances are included in this view. "
+    scope_context += "To assess the bigger picture, consider cash, retirement accounts, other investments and any overlap in sectors or business drivers. A list of different stock names alone does not establish that their risks are independent."
     return {"kind": "portfolio", "name": portfolio.name, "generated_at": utcnow().isoformat(), "view": view,
+            "analysis": [{"title": "How to interpret the allocation", "text": basis_context},
+                         {"title": "What the overall view includes", "text": scope_context}],
             "strengths": strengths, "concerns": concerns, "stocks": stocks, "limitations": limitations,
             "weight_basis": basis, "security_count": len(metrics.positions), "pf_account_count": len(balances),
             "questions": ["Does the largest holding's weight fit the amount of company-specific risk you intended?", "Do holdings overlap in sector, business drivers or geography?", "Are PF, cash and other investments part of your intended overall allocation?"]}

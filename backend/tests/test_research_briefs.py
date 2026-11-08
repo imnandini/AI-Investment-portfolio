@@ -131,6 +131,10 @@ def test_stock_brief_has_source_linked_pros_cons_and_no_upload_requirement(api_c
     assert brief["cons"][0]["source_ids"] == ["news-2"]
     assert brief["portfolio_context"]["cost_weight_pct"] == "100.00"
     assert brief["portfolio_context"]["market_weight_pct"] is None
+    assert "cash" in brief["pros"][0]["explanation"]
+    context = next(section["text"] for section in brief["analysis"] if section["title"] == "What this holding means for your portfolio")
+    assert "100.00%" in context and "cost basis" in context
+    assert "current market weight could differ" in context
     assert brief["evidence"] == []
     assert calls == [("Acme Limited", "INR")]
     assert any("No buy/sell rating" in line for line in brief["limitations"])
@@ -172,6 +176,8 @@ def test_portfolio_opinion_concentration_uses_cost_when_prices_unknown_and_exclu
     assert "Concentration" in result["view"]
     assert any("80.00%" in item and "Acme Limited" in item for item in result["concerns"])
     assert result["security_count"] == 2 and result["pf_account_count"] == 1
+    assert "recorded purchase costs" in result["analysis"][0]["text"]
+    assert "PF account balances remain visible separately" in result["analysis"][1]["text"]
     assert len(result["stocks"]) == 2
     assert any("excluded" in item and "PF" in item for item in result["limitations"])
 

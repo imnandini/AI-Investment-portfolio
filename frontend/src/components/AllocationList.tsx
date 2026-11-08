@@ -1,6 +1,6 @@
 import type { MixEntry } from "../services/api";
 
-const palette = ["#527858", "#789578", "#b98c55", "#90a88e", "#c8d3c5", "#8a9d84"];
+const palette = ["#128d83", "#477fa6", "#c28b40", "#8c76b3", "#6aa997", "#315a73"];
 
 export function AllocationList({ title, entries, currency }: { title: string; entries: MixEntry[]; currency: string }) {
   return <section className="allocation-card">

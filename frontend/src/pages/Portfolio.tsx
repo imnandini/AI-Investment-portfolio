@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
-import { AlertCircle, BriefcaseBusiness, Check, FileUp, LoaderCircle, Plus, RefreshCw, Upload, X } from "lucide-react";
+import { AlertCircle, ArrowUpRight, BriefcaseBusiness, Check, FileUp, LoaderCircle, Plus, RefreshCw, Sparkles, Upload, X } from "lucide-react";
 import { AuthGate } from "../components/AuthGate";
 import { ManualPrices } from "../components/ManualPrices";
 import { HoldingResearchLink } from "../components/HoldingResearchLink";
@@ -125,10 +125,12 @@ function PortfolioWorkspace() {
   };
 
   return <div className="subpage portfolio-page">
-    <div className="eyebrow"><span className="eyebrow-line" /> PORTFOLIO WORKSPACE</div>
-    <div className="subpage-heading"><div><h1>Your portfolios</h1><p>Holdings, cost basis, and price coverage from your own data.</p></div>
-      <button className="button button-primary" type="button" onClick={() => setShowCreate((value) => !value)}><Plus size={16} />New portfolio</button>
-    </div>
+    <section className="portfolio-hero" aria-label="Portfolio overview">
+      <div className="portfolio-hero-copy"><div className="eyebrow"><span className="eyebrow-line" /> YOUR INVESTMENT DESK</div><h1>Your portfolio,<br /><em>in focus.</em></h1><p>Understand what you own, follow the news that matters, and turn your next question into a clearer investment view.</p>
+        <div className="hero-actions"><button className="button button-primary" disabled={loading || busy || holdings.length === 0} onClick={() => openBrief(selected?.name || "Your portfolio")}><Sparkles size={17} />Get portfolio opinion<ArrowUpRight size={17} /></button><button className="button hero-secondary" type="button" onClick={() => setShowCreate(value => !value)}><Plus size={17} />New portfolio</button></div>
+      </div>
+      <div className="hero-snapshot"><span className="hero-snapshot-label">YOUR WORKSPACE AT A GLANCE</span><div className="hero-counts"><div><strong>{loading ? "—" : holdings.length}</strong><span>Securities tracked</span></div><div><strong>{loading ? "—" : balances.length}</strong><span>PF accounts</span></div></div><div className="hero-coverage"><div><span>Fresh price coverage</span><b>{loading ? "—" : `${analytics?.priced_position_count ?? 0} / ${holdings.length}`}</b></div><div className="hero-coverage-track"><span style={{ width: `${holdings.length ? (analytics?.priced_position_count ?? 0) / holdings.length * 100 : 0}%` }} /></div><p>Current, dated prices make market weights and concentration easier to assess.</p></div></div>
+    </section>
 
     {showCreate && <form className="create-portfolio surface-card" onSubmit={createPortfolio}><div><label htmlFor="portfolio-name">Portfolio name</label><input id="portfolio-name" maxLength={120} required value={portfolioName} onChange={(event) => setPortfolioName(event.target.value)} placeholder="e.g. Long-term investments" /></div><span className="base-currency-tag">Base currency · INR</span><button className="button button-primary" type="submit" disabled={busy}><Check size={15} />Create</button><button className="icon-button" type="button" aria-label="Close" onClick={() => setShowCreate(false)}><X size={16} /></button></form>}
 

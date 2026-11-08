@@ -1,64 +1,214 @@
-# AI Investment Research & Portfolio Copilot
+# Northstar — AI Investment Research & Portfolio Copilot
 
-An explainable portfolio research application. It combines deterministic portfolio calculations, sourced financial data, document retrieval, and bounded AI workflows. It is a research and risk-analysis aid, not an automated investment adviser.
+A private workspace for understanding your investments. Connect INDmoney or import a CSV, see your holdings by company name, explore recent stock news, and build a clearer view of portfolio concentration and risk.
 
-## Local setup
+The application combines exact portfolio calculations, public news, private document retrieval and a bounded LangGraph review workflow. Its default research path works without a paid news account or model API key. Research views explain their evidence and limitations; the app does not execute trades or generate personalized buy/sell instructions.
 
-For the complete local application, start Docker Desktop and run `docker compose up -d --build` from this directory. Open **http://127.0.0.1:8080**. The backend applies migrations automatically. Keep your existing `.env`; use `.env.example` only when setting up a new environment.
+## What you can do
 
-The remaining roadmap workflows are now implemented: cached provider provenance, manual price entry, private PDF ingestion and hybrid retrieval, page citations, a typed read-only MCP server/client, a bounded LangGraph review, saved reports, portfolio-aware extractive chat, deletion controls, tests, and container deployment. See [acceptance and remaining gates](docs/acceptance.md), the [demo guide](docs/demo_guide.md), [research pipeline](docs/rag_pipeline.md), [MCP design](docs/mcp_design.md), and [interview guide](docs/interview_guide.md).
+| Feature | What it gives you |
+| --- | --- |
+| INDmoney connection | Read-only account sign-in, a named holdings preview, and an incremental import of the positions you review. |
+| Stocks and mutual funds | Quantities, recorded purchase cost, saved provider prices, and explicit price freshness. |
+| EPF and PPF | Reported account balances and invested amounts in a separate **PF balances** section. |
+| CSV import | A downloadable template, row-level validation, and support for up to 500 rows per file. |
+| Stock briefs | One-click **Pros, cons & news**: recent headlines, source-linked signals, why they matter, what to check next, and the holding's portfolio context. |
+| Portfolio opinion | A one-click view of single-name concentration, known sector exposure, missing data and company news. |
+| Private document research | Upload company reports, search relevant passages, and inspect page-level citations and original source links. |
+| Saved portfolio reviews | A bounded LangGraph workflow that calculates metrics, selects research targets, retrieves evidence and saves a report. |
+| Portfolio chat | Extractive answers drawn from matching documents with your saved portfolio context. |
+| Read-only MCP | Typed tools for application research workflows, plus a separate official INDmoney connection. |
 
-The default path runs without model/API keys. It uses lexical vectors and quoted source passages. The portfolio page also supports an optional **Connect INDmoney → Preview holdings → Import reviewed holdings** flow through INDmoney's official read-only MCP endpoint. Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/setup-indmoney.ps1` once before rebuilding to create the private local encryption key. See [INDmoney setup and sync behavior](docs/indmoney.md). An account is connected only after its owner completes vendor sign-in. Licensed market feeds and optional local semantic/reranking models require separate provisioning.
+The interface uses navy navigation, teal accents, larger body text, clear metric cards and responsive layouts. Briefs include fuller explanations and a practical reading plan. Reported facts, calculation-based observations and missing inputs remain distinguishable.
 
-The initial architecture and implementation sequence are in [docs/architecture.md](docs/architecture.md). The daily execution plan is in `outputs/roadmap/AI_Investment_Copilot_Project_Plan.xlsx`.
+## Run the complete app
 
-For native development, create `.env` only if it is missing, then start the local PostgreSQL/pgvector service from the repository root:
+Start Docker Desktop, then run these commands from the repository root in PowerShell:
+
+```powershell
+# Create a local configuration only if you do not already have one.
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+
+# Optional: prepare the private local encryption key for INDmoney.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/setup-indmoney.ps1
+
+docker compose up -d --build
+```
+
+Open **http://127.0.0.1:8080**. Create an account or sign in, then open **Portfolios**. The backend applies database migrations during startup. Keep an existing `.env` and its INDmoney encryption key stable across rebuilds.
+
+Useful local endpoints:
+
+| Address | Purpose |
+| --- | --- |
+| `http://127.0.0.1:8080` | Application |
+| `http://127.0.0.1:8000/health` | Backend process liveness |
+| `http://127.0.0.1:8000/docs` | Interactive API schema |
+
+`/health` checks the API process; it does not establish database, broker or news-provider availability. Service status is available with `docker compose ps`.
+
+## Your first portfolio
+
+1. Create or select a portfolio in **Portfolios**.
+2. Choose **Connect INDmoney**, complete sign-in and consent on INDmoney's own site, and return to the app.
+3. Select **Indian stocks**, **US stocks** or **Mutual funds**, then click **Preview holdings**.
+4. Review the named positions and import notes, then click **Import reviewed holdings**. Previewing alone does not save positions.
+5. Repeat with **EPF** or **PPF** to add provident-fund account balances. Each import covers only the selected asset type.
+6. Click **Pros, cons & news** beside a saved stock, or **Portfolio opinion** above the holdings.
+
+You can also use **Import CSV** with [the holdings template](sample_data/holdings_template.csv). Required columns are `symbol`, `quantity` and `average_cost`. Optional columns include exchange, asset type, currency, sector and purchase date.
+
+### INDmoney import behavior
+
+- Imports add new positions and refresh matching INDmoney positions. Repeating an import does not keep adding the same quantity.
+- Existing manual/CSV positions are preserved. Positions absent from a later import are retained; remove closed security positions manually.
+- Company names are saved from the provider. Internal INDmoney references remain stable import and research identifiers; they are not assumed to be exchange tickers.
+- Missing exchanges appear as **Exchange not supplied**. Prices with no provider timestamp appear as **Price date not supplied**. Missing purchase costs remain unknown.
+- EPF/PPF accounts use reported balances. The adapter does not invent stock quantities, unit prices, account dates or gains for these accounts.
+- Disconnecting removes local credentials and pending previews while retaining imported positions and balances.
+
+See [INDmoney setup, authentication and sync details](docs/indmoney.md) for callback origins, native development and optional registered-client configuration.
+
+## One-click research
+
+### Stock briefs
+
+**Pros, cons & news** opens a brief on the portfolio page. It includes:
+
+- A short research view summarizing the signals present in recent company-matched headlines.
+- Potential positives and concerns, each connected to its supporting source links.
+- Explanations of why a topic could matter to the business, with specific checks to make in company disclosures.
+- Recent headlines with publisher names, publication dates and the news-check time.
+- The holding's known portfolio weight and an explanation of what that weight measures.
+- Matching private document excerpts when available, plus a practical reading plan.
+
+Public RSS queries focus on earnings, business, orders, debt and outlook. The adapter uses Bing News RSS with Google News RSS as a fallback, filters routine live-price ticker articles, and returns up to eight company-matched headlines from the last 30 days. News is cached for ten minutes; failures are cached for one minute. **Refresh brief** rechecks the assessment and reuses a current news cache.
+
+These are conservative headline topic signals. Full articles, company identity and business claims are not independently verified by the brief. An empty list of concerns does not establish that a stock is safe. Fundamentals, valuation, analyst consensus and price targets are not supplied by this feature.
+
+### Portfolio opinion
+
+The portfolio view explains the largest security weights, small position counts, known sector concentration and missing prices or sector metadata. Complete fresh market values determine weights when available; otherwise complete recorded cost basis is used and labeled clearly. The view also brings together news for up to ten equity holdings ranked by recorded purchase cost, with unknown costs last.
+
+Single-name weights above 25% and known sector weights above 40% are review prompts, not prescribed allocation limits. PF balances are acknowledged separately and are excluded from security weights. The view does not represent a complete household asset allocation or assess personal suitability.
+
+See [brief sources, methodology, limits and API endpoints](docs/research_briefs.md).
+
+## Deeper research with documents
+
+Use **Research** beside a holding to open its document workspace. The holding reference is prefilled as the document tag and search filter, so matching documents can also be used by portfolio chat and reviews.
+
+Upload text PDFs you are entitled to use, up to 5 MB and 100 pages each. Search answers quote relevant passages with document/page citations. Originals are processed in memory; extracted text and metadata are stored privately. Scanned, encrypted, malformed or unsupported files receive explicit status messages.
+
+**Search web sources** opens an external search. Those pages are not automatically ingested into the private library. Company lookup requires a verified exchange ticker and a configured authorized data provider; an internal INDmoney code is not a verified ticker.
+
+The default retrieval implementation uses lexical/hash vectors and extractive answers. Optional local semantic embeddings and reranking require separately provisioned models. See the [research pipeline](docs/rag_pipeline.md).
+
+## Calculations and data coverage
+
+Portfolio calculations use Decimal arithmetic:
+
+- **Cost basis:** quantity × average purchase cost.
+- **Market value:** quantity × a matching supplied or saved price.
+- **Unrealized P/L:** market value − cost basis, when both are known.
+- **Market allocation:** each position's share of complete base-currency market value.
+- **Asset/sector mix:** known base-currency cost basis.
+- **Concentration index:** sum of squared market-allocation percentages, on a 0–10,000 scale.
+
+Manual reference prices can be entered in the app. They take precedence over saved INDmoney prices. Prices older than seven days, prices with no timestamp, and currency-mismatched prices are excluded from aggregate market metrics. There is no inferred FX conversion, estimated missing price or zero-filled missing purchase cost. PF account balances stay separate from security calculations.
+
+A live statement or market-price provider is not enabled by default. Public news availability does not establish complete financial fundamentals or a current valuation.
+
+## Native development
+
+The containers are the simplest complete setup. For native development, install Python and Node.js 24+, keep the root `.env`, and start PostgreSQL/pgvector:
 
 ```powershell
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 docker compose up -d db
-```
 
-Start the FastAPI service from PowerShell:
-
-```powershell
-cd backend
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-uvicorn app.main:app --reload
+python -m pip install -r backend/requirements-dev.txt
+
+cd backend
+alembic upgrade head
+uvicorn app.main:app --reload --no-access-log
 ```
 
-Open `http://127.0.0.1:8000/health` for the liveness response and `http://127.0.0.1:8000/docs` for the API schema.
+Ensure `DATABASE_URL` uses the credentials and host port configured for the database. Docker's backend connects to `db:5432`; a native backend connects to the exposed localhost port, which is controlled by `POSTGRES_PORT`.
 
-Start the frontend in a second PowerShell window after installing Node.js 24+:
+In a second PowerShell window:
 
 ```powershell
 cd frontend
-Copy-Item .env.example .env.local
-npm install
+if (-not (Test-Path .env.local)) { Copy-Item .env.example .env.local }
+npm ci
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`. The frontend checks `GET /health` on startup. Sign in or create an account, then create a portfolio and import a UTF-8 CSV using the supplied template. The dashboard and portfolio page show backend-calculated cost basis, asset/sector allocation, position rows, and price freshness. Market value and P/L remain blank until usable prices are supplied through the analytics API. Set `VITE_API_BASE_URL` in `frontend/.env.local` to point at another API host; add its frontend origin to `CORS_ORIGINS` in the root `.env` when it differs from the local defaults. Company research supports uploaded PDFs and cited search; provider facts remain unavailable until an authorized source is connected.
+Open **http://127.0.0.1:5173**. For INDmoney in native development, set `INDMONEY_REDIRECT_URI=http://127.0.0.1:5173/portfolios` in the root `.env` and restart the backend. Use that same origin before and after sign-in. Set `VITE_API_BASE_URL` in `frontend/.env.local` when using another API host and include its frontend origin in backend `CORS_ORIGINS`.
 
-Install `requirements-dev.txt` and run `python -m pytest` from `backend/` to run the CSV and analytics checks.
+### Configuration
 
-The app loads typed settings from environment variables (or the root `.env` file), creates its SQLAlchemy engine during application startup, and disposes it during shutdown. `/health` remains a process liveness check and does not require a database connection.
+| Setting | Purpose |
+| --- | --- |
+| `DATABASE_URL` | SQLAlchemy PostgreSQL connection string. |
+| `SECRET_KEY` | Application token signing; use a strong private value outside local development. |
+| `INDMONEY_TOKEN_KEY` | Stable Fernet key for stored OAuth credentials and previews. |
+| `INDMONEY_REDIRECT_URI` | Exact portfolio-page callback URL for the frontend origin in use. |
+| `FINANCIAL_DATA_PROVIDER` | Defaults to `none`; unsupported adapters report unavailable data. |
+| `EMBEDDING_PROVIDER` | Defaults to `hash`; optional local model configuration is documented separately. |
+| `CORS_ORIGINS` | Frontend origins accepted by the API. |
+| `POSTGRES_PORT` | Host port exposed by the local Docker database. |
 
-After starting PostgreSQL, apply the initial schema migration from the backend directory:
+No model or news API key is required for the default stock briefs, portfolio opinion or extractive research workflow.
+
+## Verification
+
+From the repository root, with the Python environment active:
 
 ```powershell
-cd backend
-alembic upgrade head
+python -m pytest backend/tests -q
 ```
 
-The API now supports registration and login at `/auth/register` and `/auth/login`. Send the returned bearer token to `/auth/me` and the protected `/portfolios` and `/portfolios/{portfolio_id}/holdings` endpoints. Portfolio and holding reads and writes are scoped to the authenticated user. Configure a strong `SECRET_KEY` before running outside local development.
+From `frontend/`:
 
-Holdings can be imported with `POST /portfolios/{portfolio_id}/holdings/import` as multipart field `file`; use [the CSV template](sample_data/holdings_template.csv). The importer accepts UTF-8 CSV files up to 1 MB and 500 rows. Valid rows are saved while invalid or duplicate rows are returned with CSV row numbers. This is a manual file import, not a live broker feed.
+```powershell
+npm test
+npm run build
+```
 
-`POST /portfolios/{portfolio_id}/analytics` returns cost basis, market value, unrealized P/L, allocation, asset/sector mix, and concentration metadata. Provide optional manual prices as `{"prices":[{"symbol":"INFY","exchange":"NSE","price":"1600.00","currency":"INR","as_of":"2026-11-03T10:00:00Z"}]}`. Without a matching fresh price, market totals and allocation remain incomplete. Prices older than seven days or without an as-of timestamp are excluded from aggregate market metrics. There is no price provider or FX conversion yet.
+Optional browser tests against a running local app:
 
-## Foundation history
+```powershell
+npx playwright install chromium
+npm run test:e2e
+```
 
-Days 1–12 established authentication, portfolio/holding management, CSV imports, Decimal analytics, the dashboard, and the no-provider contract. Subsequent implementation and verification are tracked in [docs/acceptance.md](docs/acceptance.md). The source-access decision in [docs/data_sources.md](docs/data_sources.md) still applies: no live vendor is enabled until its terms cover the app's display and storage.
+Tests cover authentication and ownership, CSV validation, portfolio arithmetic, unknown costs, INDmoney OAuth/imports, PF balances, source/date filtering, news failure and caching, signal attribution, research retrieval and citations, one-click brief interactions, retries and stale responses. The production build checks TypeScript and bundles the interface.
+
+## Project structure
+
+```text
+backend/app/api/                       Authenticated FastAPI endpoints
+backend/app/integrations/              INDmoney, company news and provider adapters
+backend/app/services/                  Import, pricing and research brief logic
+backend/app/analytics/                 Exact portfolio calculations
+backend/app/agents/portfolio_review/   Bounded LangGraph review workflow
+backend/app/rag/                       Retrieval and extractive answers
+backend/migrations/                   Alembic schema migrations
+frontend/src/pages/                   Portfolio, dashboard and research screens
+frontend/src/components/              Holdings, briefs, sources and account views
+frontend/src/theme.css                App-wide palette, type scale and responsive styling
+backend/tests/                        Backend regression suite
+frontend/src/**/*.test.tsx            Frontend interaction checks
+```
+
+## Privacy and application boundaries
+
+Accounts scope portfolios, documents, saved prices, chat and reviews to their owner. INDmoney sign-in takes place on the vendor's own pages; credentials remain encrypted in the backend. News requests send public company names and market locale, not holdings quantities, account balances or purchase costs. Callback logging and external tracing are disabled in the supplied local configuration.
+
+The app is a research and risk-analysis aid. News feeds can be unavailable or incomplete, uploaded sources can conflict, and missing data remains visible. There is no continuous broker reconciliation, automated trading, personalized suitability engine or enabled licensed real-time market feed.
+
+Further documentation: [architecture](docs/architecture.md), [acceptance and remaining gates](docs/acceptance.md), [demo guide](docs/demo_guide.md), [MCP design](docs/mcp_design.md), [data sources](docs/data_sources.md), and [interview guide](docs/interview_guide.md).

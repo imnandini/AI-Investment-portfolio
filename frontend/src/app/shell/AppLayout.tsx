@@ -32,7 +32,7 @@ export function AppLayout() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="sidebar-note"><span className="note-icon"><CircleHelp size={16} /></span><div><b>Research with clarity</b><p>Every insight should show its source.</p></div></div>
+          <div className="sidebar-note"><span className="note-icon"><CircleHelp size={19} /></span><div><b>Your next insight starts here.</b><p>Open a holding to explore the news, weigh the signals and follow the evidence.</p></div></div>
           {user ? <button className="profile profile-button" type="button" onClick={signOut} title="Sign out">
             <span className="avatar">{user.email.slice(0, 1).toUpperCase()}</span><span className="profile-copy"><b>{user.email}</b><small>Sign out</small></span><LogOut size={14} className="profile-arrow" />
           </button> : <div className="profile"><span className="avatar">N</span><span className="profile-copy"><b>Your workspace</b><small>Private account</small></span></div>}
@@ -42,7 +42,7 @@ export function AppLayout() {
       <div className="main-column">
         <header className="topbar">
           <div className="breadcrumb"><span>Workspace</span><span className="crumb-slash">/</span><b>{currentPage}</b></div>
-          <div className="topbar-right"><span className="topbar-hint"><Command size={13} /> Research workspace</span><ApiStatus compact /></div>
+          <div className="topbar-right"><span className="topbar-hint"><Sparkles size={15} /> Perspective, backed by sources</span><ApiStatus compact /></div>
         </header>
         <main className="page-shell"><Outlet /></main>
         <footer className="app-footer"><span><Activity size={13} /> Built for thoughtful decisions</span><span>Research and risk analysis · Not investment advice</span></footer>

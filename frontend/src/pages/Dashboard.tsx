@@ -8,9 +8,9 @@ import { StatePanel } from "../components/StatePanel";
 import { apiGet, apiPost, type Portfolio, type PortfolioAnalytics } from "../services/api";
 
 const steps = [
-  { n: "01", icon: FileUp, title: "Add your holdings", text: "Create a portfolio or import a CSV to get started.", to: "/portfolios", link: "Set up portfolio" },
-  { n: "02", icon: LineChart, title: "Understand the numbers", text: "See cost basis, allocation, and risk with clear assumptions.", to: "/portfolios", link: "Explore analytics" },
-  { n: "03", icon: Sparkles, title: "Research with evidence", text: "Bring company disclosures and sourced facts into view.", to: "/research", link: "Open research" },
+  { n: "01", icon: FileUp, title: "Bring your investments together", text: "Connect INDmoney or import a CSV. Track stocks and funds by name, with provident fund balances in their own account view.", to: "/portfolios", link: "Open your portfolio" },
+  { n: "02", icon: LineChart, title: "See the story behind the numbers", text: "Explore your cost basis, allocation and price coverage. Get a portfolio opinion that explains concentration and the gaps worth checking.", to: "/portfolios", link: "Explore your holdings" },
+  { n: "03", icon: Sparkles, title: "Go from a holding to an informed view", text: "Open a stock brief for recent news, reported positives and concerns. Follow the source links or add company filings for deeper research.", to: "/portfolios", link: "Find your next research question" },
 ];
 
 function DashboardSummary() {
@@ -51,7 +51,7 @@ export function DashboardPage() {
 
 function DashboardContent() {
   return <div className="dashboard-page">
-    <section className="welcome-row"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR RESEARCH WORKSPACE</div><h1>Good decisions start<br className="desktop-break" /> with a clearer picture.</h1><p className="welcome-copy">A calm place to understand your portfolio, follow the evidence, and see what is still unknown.</p></div><div className="welcome-art" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="orbit-core"><Sparkles size={23} /></div><span className="orbit-point point-one" /><span className="orbit-point point-two" /></div></section>
+    <section className="welcome-row"><div><div className="eyebrow"><span className="eyebrow-line" /> A CLEARER PERSPECTIVE ON YOUR MONEY</div><h1>Own your investments.<br className="desktop-break" /><em>Understand the bigger picture.</em></h1><p className="welcome-copy">Your holdings, company news and research in one workspace. See what is driving the conversation, where your portfolio is concentrated, and what deserves a closer look.</p><Link className="button button-primary welcome-cta" to="/portfolios">Explore your portfolio<ArrowRight size={17} /></Link></div><div className="welcome-art" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="orbit-core"><Sparkles size={31} /></div><span className="orbit-point point-one" /><span className="orbit-point point-two" /></div></section>
 
     <section className="notice-card"><div className="notice-symbol"><ShieldCheck size={19} /></div><div className="notice-copy"><b>Your data, your context</b><p>Calculations use the holdings and prices you provide. Missing or stale inputs stay visible.</p></div><span className="notice-tag"><Fingerprint size={13} /> PRIVATE BY DESIGN</span></section>
 
@@ -62,7 +62,7 @@ function DashboardContent() {
 
     <section className="overview-grid">
       <div className="surface-card portfolio-overview"><div className="card-heading"><div><span className="section-kicker">PORTFOLIO SNAPSHOT</span><h2>Your portfolio</h2></div><span className="subtle-badge">LIVE FROM YOUR DATA</span></div><DashboardSummary /></div>
-      <div className="surface-card connection-card"><div className="card-heading"><div><span className="section-kicker">SYSTEM STATUS</span><h2>Workspace connection</h2></div><span className="connection-pulse" /></div><p className="connection-intro">The dashboard checks the API health endpoint when it loads.</p><ApiStatus /><div className="connection-foot"><span>Health check</span><code>GET /health</code></div></div>
+      <div className="surface-card connection-card"><div className="card-heading"><div><span className="section-kicker">CONNECTED WORKSPACE</span><h2>Ready for your next question</h2></div><span className="connection-pulse" /></div><p className="connection-intro">Open a stock brief directly from your holdings for news and source-linked signals. Use portfolio opinion to put individual positions into the context of the whole portfolio.</p><ApiStatus /><div className="connection-foot"><span>Research starts with your holdings</span><Link to="/portfolios" className="text-link">Open portfolio<ArrowRight size={15} /></Link></div></div>
     </section>
     <div className="bottom-note"><span className="bottom-note-mark">i</span><span>This workspace is a research aid. It does not place trades or promise investment outcomes.</span></div>
   </div>;

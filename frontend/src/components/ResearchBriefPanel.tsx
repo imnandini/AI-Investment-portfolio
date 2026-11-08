@@ -4,7 +4,7 @@ import { getBrief, type NewsSignal, type ResearchBrief, type StockBrief } from "
 import { EvidencePanel } from "./EvidencePanel";
 
 function Signals({ title, signals, brief, empty }: { title: string; signals: NewsSignal[]; brief: StockBrief; empty: string }) {
-  return <section><h3>{title}</h3>{signals.length ? <ul className="brief-signals">{signals.map(signal => <li key={signal.title}><b>{signal.title}</b><p>{signal.text}</p><div>{signal.source_ids.map(id => {
+  return <section><h3>{title}</h3>{signals.length ? <ul className="brief-signals">{signals.map(signal => <li key={signal.title}><b>{signal.title}</b>{signal.explanation && <p>{signal.explanation}</p>}<p><strong className="brief-check-label">What to check next</strong>{signal.text}</p><div>{signal.source_ids.map(id => {
     const source = brief.news.articles.find(article => article.id === id);
     return source && <a key={id} href={source.url} target="_blank" rel="noopener noreferrer">{source.title} ↗</a>;
   })}</div></li>)}</ul> : <p>{empty}</p>}</section>;
@@ -15,6 +15,8 @@ function StockContent({ brief }: { brief: StockBrief }) {
   const costWeight = brief.portfolio_context.cost_weight_pct;
   return <>
     <p className="brief-view">{brief.view}</p>
+    <div className="brief-summary-facts"><span>{brief.news.articles.length} recent headlines</span><span>{brief.pros.length} positive topics</span><span>{brief.cons.length} concern topics</span></div>
+    {brief.analysis?.map(section => <section className="brief-explainer" key={section.title}><h3>{section.title}</h3><p>{section.text}</p></section>)}
     {(marketWeight !== null || costWeight !== null) && <p className="brief-meta">Your portfolio weight: {Number(marketWeight ?? costWeight).toFixed(1)}% of security {marketWeight !== null ? "market value" : "cost basis"}.</p>}
     <p className="brief-meta">Pros and cons below are potential signals from reported headlines. Confirm them against company disclosures.</p>
     <div className="brief-columns"><Signals title="Pros to investigate" signals={brief.pros} brief={brief} empty="No supported positive signals were identified in the recent matched headlines." /><Signals title="Cons to investigate" signals={brief.cons} brief={brief} empty="No specific concern signals were identified. This does not mean the stock is low risk." /></div>
@@ -22,6 +24,7 @@ function StockContent({ brief }: { brief: StockBrief }) {
       {brief.news.articles.length ? <ul>{brief.news.articles.map(article => <li key={article.id}><a href={article.url} target="_blank" rel="noopener noreferrer">{article.title} ↗</a><small>{article.publisher} · {new Date(article.published_at).toLocaleString()}</small></li>)}</ul> : <p role="status">{brief.news.note}</p>}
     </section>
     {brief.evidence.length > 0 && <section><h3>From your uploaded sources</h3><EvidencePanel evidence={brief.evidence} /></section>}
+    <section className="brief-next-steps"><h3>A practical reading plan</h3><div className="brief-reading-plan"><div><b>01 · Start with the filing</b><p>Find the latest quarterly results or exchange announcement behind the headline. Check the reporting period and whether the figure describes the whole company or one business segment.</p></div><div><b>02 · Test the business impact</b><p>Look at margins, cash flow and debt alongside growth. Ask whether the event changes future operations, or mainly reflects short-term market attention.</p></div><div><b>03 · Bring it back to your portfolio</b><p>Consider the size of this holding and its overlap with other investments. Separate the company's business outlook from the price you would be paying for it.</p></div></div></section>
     <details><summary>Questions and evidence limits</summary><ul>{[...brief.questions, ...brief.limitations].map((text, i) => <li key={i}>{text}</li>)}</ul></details>
   </>;
 }
@@ -53,6 +56,7 @@ export function ResearchBriefPanel({ portfolioId, holdingId, name, onClose }: { 
     {brief && <><p className="brief-meta">Prepared {new Date(brief.generated_at).toLocaleString()} · Research view · Not investment advice</p>
       {brief.kind === "stock" ? <StockContent brief={brief} /> : <>
         <p className="brief-view">{brief.view}</p><p className="brief-meta">{brief.security_count} securities · Weights use {brief.weight_basis} · {brief.pf_account_count} PF accounts shown separately</p>
+        {brief.analysis?.map(section => <section className="brief-explainer" key={section.title}><h3>{section.title}</h3><p>{section.text}</p></section>)}
         <div className="brief-columns"><section><h3>What looks constructive</h3>{brief.strengths.length ? <ul>{brief.strengths.map(text => <li key={text}>{text}</li>)}</ul> : <p>There is not enough evidence for a supported positive observation yet.</p>}</section><section><h3>What needs attention</h3><ul>{brief.concerns.map(text => <li key={text}>{text}</li>)}</ul></section></div>
         {brief.stocks.length > 0 && <section><h3>Company briefs and news</h3><p>Largest equity holdings by recorded cost basis, up to 10. Expand a company to see its pros, cons and news.</p>{brief.stocks.map(stock => <details className="brief-stock-detail" key={stock.holding_id}><summary>{stock.name}</summary><StockContent brief={stock} /></details>)}</section>}
         <details><summary>Questions and assessment limits</summary><ul>{[...brief.questions, ...brief.limitations].map((text, i) => <li key={i}>{text}</li>)}</ul></details>
