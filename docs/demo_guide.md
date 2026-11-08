@@ -30,6 +30,6 @@ Troubleshooting:
 - Database permission error creating `vector`: apply the extension once with an authorized database administrator. Do not grant superuser privileges to a public application.
 - 401: sign in again; tokens expire. 429: wait one minute. 413: reduce file size.
 - PDF `scanned_or_empty`: provide a text PDF; OCR is not implemented. Index error: check optional model configuration, delete the failed record and upload again.
-- Missing financial data is the expected no-provider state. This app does not fetch exchange websites or broker accounts.
+- Missing company financial data is the expected no-provider state. The optional [INDmoney connection](indmoney.md) imports account holdings after vendor consent; it does not enable exchange scraping or a general company-data feed.
 
 Use `docker compose stop` to stop services while preserving data. This guide does not instruct removing database volumes.

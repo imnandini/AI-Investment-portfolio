@@ -16,6 +16,8 @@ from app.api.prices import router as prices_router
 from app.api.reviews import router as reviews_router
 from app.api.chat import router as chat_router
 from app.api.mcp import router as mcp_router
+from app.api.indmoney import router as indmoney_router
+from app.api.briefs import router as briefs_router
 from app.middleware.security import SecurityMiddleware
 from app.core.config import get_settings
 from app.db.session import dispose_database, initialize_database
@@ -64,3 +66,5 @@ app.include_router(prices_router)
 app.include_router(reviews_router)
 app.include_router(chat_router)
 app.include_router(mcp_router)
+app.include_router(indmoney_router)
+app.include_router(briefs_router)

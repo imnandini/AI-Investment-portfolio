@@ -12,7 +12,7 @@ vi.mock("../components/AuthGate", () => ({ AuthGate: ({ children }: { children: 
 vi.mock("../services/api", () => ({ apiGet: vi.fn(), apiPost: vi.fn(), apiUpload: vi.fn(), apiDelete: vi.fn() }));
 vi.mock("../services/reviews", () => ({ getReviews: vi.fn(), launchReview: vi.fn() }));
 afterEach(cleanup);
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => { vi.clearAllMocks(); window.history.replaceState({}, "", "/research"); });
 const evidence = { chunk_id: "chunk-1", document_id: "doc-1", title: "Synthetic report", company: "AAA", page: 3, period: "FY2026", publication_date: "2026-01-01", source_url: "https://example.org/report", text: "Revenue increased.", score: 1 };
 
 describe("research flows", () => {
@@ -43,6 +43,29 @@ describe("research flows", () => {
     await screen.findByText("Saved report");
     expect(screen.getByText("Price data missing")).toBeTruthy();
     expect(launchReview).toHaveBeenCalledWith("p1");
+  });
+  it("opens named INDmoney research without treating its internal code as an exchange ticker", async () => {
+    window.history.replaceState({}, "", "/research?holding=INDS00001&name=Synthetic%20Company");
+    vi.mocked(apiGet).mockResolvedValue([]);
+    vi.mocked(apiPost).mockResolvedValue({ answer: "Insufficient evidence.", evidence: [], limitations: [] });
+    render(<CompanyResearchPage />);
+    expect(screen.getByRole("heading", { name: "Synthetic Company" })).toBeTruthy();
+    expect((screen.getByLabelText("Symbol") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("Company / ticker") as HTMLInputElement).value).toBe("INDS00001");
+    expect((screen.getByLabelText("Company filter") as HTMLInputElement).value).toBe("INDS00001");
+    expect(screen.getByRole("link", { name: "Search web sources" }).getAttribute("href")).toContain("Synthetic%20Company");
+    await userEvent.click(screen.getByRole("button", { name: "Find evidence" }));
+    await waitFor(() => expect(apiPost).toHaveBeenCalledWith("/documents/answer", expect.objectContaining({ company: "INDS00001" })));
+    expect(apiGet).not.toHaveBeenCalledWith(expect.stringContaining("/companies/"));
+  });
+  it("researches PF rules without using a private account label in web search", async () => {
+    window.history.replaceState({}, "", "/research?holding=EPF-012345&name=Private%20Account%20Label");
+    vi.mocked(apiGet).mockResolvedValue([]);
+    render(<CompanyResearchPage />);
+    expect(screen.queryByRole("heading", { name: "Company lookup" })).toBeNull();
+    const search = screen.getByRole("link", { name: "Search web sources" });
+    expect(search.getAttribute("href")).toContain("EPFO");
+    expect(search.getAttribute("href")).not.toContain("Private");
   });
   it("keeps API failures visible in chat", async () => {
     vi.mocked(apiGet).mockImplementation(async path => path === "/portfolios" ? [{ id: "p1", name: "My portfolio" }] : []);

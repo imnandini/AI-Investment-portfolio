@@ -58,7 +58,9 @@ Ownership indexes and foreign keys are required. Every user-facing query filters
 | INDmoney portfolio MCP | Official endpoint shown as `https://mcp.indmoney.com/mcp`; read-only, Streamable HTTP example for Claude, OAuth 2.1 with PKCE | Official page describes a Claude connector flow and 14 capability groups. General third-party application registration, OAuth client credentials/redirect registration, full tool JSON schemas, terms for backend use, SLA/rate limits, and supported non-Claude client behavior are not established in the public page. Integration is not implemented. Continue with CSV and a provider boundary. |
 | MCP protocol | Official Python MCP SDK, separate typed server and backend client | Select compatible documented SDK version during MCP milestone. |
 
-### INDmoney verification before connecting
+### INDmoney verification before connecting (historical decision)
+
+**Update, 7 November 2026:** the user explicitly requested their personal INDmoney connection. The remote OAuth/PKCE client, encrypted credentials, holdings preview/import and portfolio controls are implemented; public metadata and dynamic registration were verified against the real endpoint. The previous implementation deferral below is superseded for this personal flow. Private holdings still require account-owner sign-in. See [current INDmoney implementation and limits](indmoney.md).
 
 1. Ask INDmoney whether the official endpoint permits a custom application/backend client, not only a Claude connector; obtain supported auth/client registration and redirect requirements.
 2. Obtain complete `tools/list` schemas, pagination/limits, error behavior, token lifetime/refresh/revocation semantics, and consent scopes.
@@ -107,6 +109,6 @@ The milestone descriptions above record the foundation as it was built. Days 13â
 - **Incorrect return claims:** start with quantity/cost-basis unrealized P&L; label assumptions and exclude time-weighted or money-weighted return claims unless all required cash flows and methodology exist.
 - **Poor financial retrieval/citations:** retain page/document metadata, combine exact keyword retrieval with semantic retrieval, rerank, require evidence for document facts, and evaluate citation correctness.
 - **Prompt injection in uploaded files:** treat document text as untrusted evidence, isolate it from system instructions, constrain tools, and test adversarial documents.
-- **Unclear INDmoney access rights:** do not assume a Claude connector implies authorization for this app; block implementation until the vendor confirms the client flow and allowed use.
+- **INDmoney deployment scope:** the personal OAuth/holdings flow is now implemented as explicitly requested. Do not represent untested private account access as verified, or assume this establishes commercial redistribution rights. See `docs/indmoney.md`.
 - **LLM tool abuse or unbounded workflow:** expose narrow typed read-only tools; enforce authorization outside model inputs; cap retries, time, and context; return partial results with gaps.
 - **Scope and dependency sprawl:** implement phase gates, add infrastructure only when its milestone needs it, and keep deterministic logic separate from AI synthesis.

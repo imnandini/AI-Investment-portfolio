@@ -53,6 +53,7 @@ class InstrumentRead(BaseModel):
 
     id: UUID
     canonical_symbol: str
+    display_name: str | None = None
     exchange: str
     asset_type: str
     currency: str
@@ -124,7 +125,8 @@ class HoldingRead(BaseModel):
 
     id: UUID
     quantity: Decimal
-    average_cost: Decimal
+    average_cost: Decimal | None
+    source: str = "manual"
     purchase_date: date | None
     instrument: InstrumentRead
 

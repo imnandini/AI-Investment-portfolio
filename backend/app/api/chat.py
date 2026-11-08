@@ -13,6 +13,7 @@ from app.rag.answering import grounded_answer
 from app.rag.retrieval import retrieve
 from app.schemas.research import SearchRequest
 from app.services.prices import require_portfolio, saved_prices
+from app.services.indmoney import list_balances
 
 router = APIRouter(prefix="/portfolios/{portfolio_id}/chat", tags=["research chat"])
 DB = Annotated[Session, Depends(get_session)]
@@ -27,9 +28,12 @@ class ChatRequest(BaseModel):
 def ask(portfolio_id: UUID, payload: ChatRequest, session: DB, user: CurrentUser, settings: Annotated[Settings, Depends(get_settings)]):
     portfolio = require_portfolio(session, user.id, portfolio_id)
     metrics = calculate_portfolio_analytics(portfolio, saved_prices(session, portfolio_id))
-    companies = sorted({h.instrument.canonical_symbol for h in portfolio.holdings})
+    balances = list_balances(session, user.id, portfolio_id)
+    companies = sorted({h.instrument.canonical_symbol for h in portfolio.holdings} | {b["symbol"] for b in balances})
     evidence = retrieve(session, user.id, SearchRequest(query=payload.question, companies=companies, limit=4), settings)
     response = grounded_answer(evidence).model_dump(mode="json")
+    if balances:
+        response["limitations"].append("PF balances are shown separately from security cost basis, valuations and allocation metrics.")
     response["portfolio_context"] = {"name": portfolio.name, "position_count": len(portfolio.holdings), "cost_basis": str(metrics.cost_basis_total) if metrics.cost_basis_total is not None else None, "currency": portfolio.base_currency, "price_coverage": f"{metrics.priced_position_count}/{len(portfolio.holdings)}", "complete": metrics.complete}
     response["activities"].insert(0, "Loaded your portfolio and calculated current metrics")
     message = ChatMessage(user_id=user.id, portfolio_id=portfolio_id, question=payload.question, response=response)

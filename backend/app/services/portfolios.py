@@ -148,6 +148,7 @@ def update_holding(
         raise HoldingNotFoundError
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(holding, field, value)
+    holding.source = "manual"
     session.commit()
     session.refresh(holding)
     return holding

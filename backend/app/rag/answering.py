@@ -6,7 +6,7 @@ def grounded_answer(evidence: list[Evidence]) -> Answer:
     # There is no generative model configured. This intentionally makes no inferred claims.
     if not evidence:
         return Answer(status="insufficient_evidence", answer="Insufficient evidence in your uploaded documents for this question.", evidence=[],
-            limitations=["Upload a relevant text PDF or narrow the question. External web and broker sources are not connected."], activities=["Searched your document library", "No supporting passages found"])
+            limitations=["Upload a relevant text PDF or narrow the question. Company evidence comes from your document library; portfolio context uses saved holdings."], activities=["Searched your document library", "No supporting passages found"])
     excerpts = [f"[{i}] {item.title}, page {item.page}:\n{item.text}" for i, item in enumerate(evidence, 1)]
     return Answer(status="supported", answer="Relevant source passages:\n\n" + "\n\n".join(excerpts), evidence=evidence,
         limitations=["Extractive results quote uploaded documents. They are not independently verified or synthesized conclusions.",

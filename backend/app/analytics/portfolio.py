@@ -51,11 +51,11 @@ def calculate_portfolio_analytics(
     for holding in holdings:
         instrument = holding.instrument
         quantity = Decimal(holding.quantity)
-        average_cost = Decimal(holding.average_cost)
-        if quantity <= 0 or average_cost < 0:
+        average_cost = Decimal(holding.average_cost) if holding.average_cost is not None else None
+        if quantity <= 0 or (average_cost is not None and average_cost < 0):
             raise ValueError("Holdings must have positive quantity and nonnegative average cost.")
-        cost_basis = _money(quantity * average_cost)
-        if instrument.currency == portfolio.base_currency:
+        cost_basis = _money(quantity * average_cost) if average_cost is not None else None
+        if instrument.currency == portfolio.base_currency and cost_basis is not None:
             cost_total += cost_basis
             asset_costs[instrument.asset_type] += cost_basis
             sector_costs[instrument.sector or "Unknown"] += cost_basis
@@ -74,7 +74,7 @@ def calculate_portfolio_analytics(
             else:
                 current_price = quote.price
                 market_value = _money(quantity * quote.price)
-                unrealized_pl = _money(market_value - cost_basis)
+                unrealized_pl = _money(market_value - cost_basis) if cost_basis is not None else None
                 price_as_of = quote.as_of
                 if quote.as_of is None:
                     price_status = "unknown_freshness"
@@ -125,7 +125,7 @@ def calculate_portfolio_analytics(
                 position.market_allocation_pct = _pct(position.market_value, base_market_total)
     if base_cost_total is not None and base_cost_total > 0:
         for position in positions:
-            if position.currency == portfolio.base_currency:
+            if position.currency == portfolio.base_currency and position.cost_basis is not None:
                 position.cost_basis_allocation_pct = _pct(position.cost_basis, base_cost_total)
 
     def build_mix(values: dict[str, Decimal]) -> list[MixEntry]:
@@ -157,6 +157,8 @@ def calculate_portfolio_analytics(
     notes: list[str] = []
     if not holdings:
         notes.append("Portfolio has no holdings.")
+    if any(p.average_cost is None for p in positions):
+        notes.append("Purchase costs are unknown for some holdings; cost totals, cost allocations and affected P/L are unavailable. Asset and sector figures include known costs only.")
     if priced_count < len(holdings):
         notes.append("At least one holding has no usable matching price; market totals and allocation are incomplete.")
     if any(p.price_status == "stale" for p in positions):
@@ -168,7 +170,7 @@ def calculate_portfolio_analytics(
     if any(p.currency != portfolio.base_currency for p in positions):
         notes.append("Foreign-currency holdings are excluded from base-currency totals because FX conversion is unavailable.")
     if not all_costs_base and base_cost_total is None:
-        notes.append("Base-currency cost basis totals and mix are incomplete because FX conversion is unavailable.")
+        notes.append("Base-currency cost basis totals and mix require known costs in the base currency.")
 
     return PortfolioAnalytics(
         portfolio_id=str(portfolio.id if isinstance(portfolio.id, UUID) else portfolio.id),
@@ -177,7 +179,7 @@ def calculate_portfolio_analytics(
             "Cost basis = quantity × average cost. Market value = quantity × user-supplied price. "
             "Unrealized P/L = market value − cost basis. Market allocation uses complete base-currency market value; "
             "asset and sector mix use base-currency cost basis. Prices older than 7 days or without an as-of timestamp "
-            "are excluded from aggregate market metrics. Concentration index is the sum of squared "
+            "are excluded from aggregate market metrics. Saved INDmoney prices are also supported; missing purchase costs stay unknown. Concentration index is the sum of squared "
             "market-allocation percentages (0–10,000). No FX conversion or missing-price estimate is applied."
         ),
         cost_basis_total=base_cost_total,

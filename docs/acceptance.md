@@ -1,5 +1,7 @@
 # Roadmap implementation and acceptance
 
+**INDmoney update, 7 November 2026:** the previously deferred personal INDmoney connection is implemented. See [INDmoney setup, verification and limitations](indmoney.md). OAuth metadata and dynamic registration were verified live; private account authentication and payload verification remain dependent on the account owner. The historical matrix below predates that addition where it describes INDmoney as disabled.
+
 Reviewed 7 November 2026. The local no-provider application implements the remaining roadmap workflows. **This is not unconditional completion of every external/model-dependent exit check.** Day 12's licensed adapter and Day 17's provisioned semantic model remain gated. The existing source-access decision is preserved. No brokerage or market-data access was invented.
 
 | Day | Delivered behavior / evidence | State |

@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     chunk_overlap: int = 200
     request_limit_per_minute: int = 120
     internal_api_url: str = "http://127.0.0.1:8000"
+    indmoney_redirect_uri: str = "http://127.0.0.1:8080/portfolios"
+    indmoney_token_key: str = ""
+    indmoney_client_id: str = ""
+    indmoney_client_secret: str = ""
 
     @model_validator(mode="after")
     def validate_production_secrets(self) -> "Settings":

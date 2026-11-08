@@ -13,3 +13,4 @@ PyMuPDF==1.28.2
 pgvector==0.4.2
 langgraph==1.2.20
 mcp==1.30.0
+cryptography==50.0.2

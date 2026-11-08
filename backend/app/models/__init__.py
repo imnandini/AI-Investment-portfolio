@@ -6,5 +6,6 @@ from app.models.data_source import DataSourceRecord, ManualPrice
 from app.models.document import Document
 from app.models.document_chunk import DocumentChunk
 from app.models.review import ChatMessage, PortfolioReview
+from app.models.indmoney import IndmoneyBalance, IndmoneyConnection, IndmoneyPreview, IndmoneyPrice
 
 __all__ = ["Holding", "Instrument", "Portfolio", "User"]

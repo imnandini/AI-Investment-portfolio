@@ -8,7 +8,7 @@ For the complete local application, start Docker Desktop and run `docker compose
 
 The remaining roadmap workflows are now implemented: cached provider provenance, manual price entry, private PDF ingestion and hybrid retrieval, page citations, a typed read-only MCP server/client, a bounded LangGraph review, saved reports, portfolio-aware extractive chat, deletion controls, tests, and container deployment. See [acceptance and remaining gates](docs/acceptance.md), the [demo guide](docs/demo_guide.md), [research pipeline](docs/rag_pipeline.md), [MCP design](docs/mcp_design.md), and [interview guide](docs/interview_guide.md).
 
-The default path runs without model/API keys. It uses lexical vectors and quoted source passages. Licensed market feeds, INDmoney access, and optional local semantic/reranking models require separate provisioning; they are not reported as connected.
+The default path runs without model/API keys. It uses lexical vectors and quoted source passages. The portfolio page also supports an optional **Connect INDmoney → Preview holdings → Import reviewed holdings** flow through INDmoney's official read-only MCP endpoint. Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/setup-indmoney.ps1` once before rebuilding to create the private local encryption key. See [INDmoney setup and sync behavior](docs/indmoney.md). An account is connected only after its owner completes vendor sign-in. Licensed market feeds and optional local semantic/reranking models require separate provisioning.
 
 The initial architecture and implementation sequence are in [docs/architecture.md](docs/architecture.md). The daily execution plan is in `outputs/roadmap/AI_Investment_Copilot_Project_Plan.xlsx`.
 

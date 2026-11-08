@@ -6,11 +6,12 @@ export type HealthResponse = { status: string };
 export type User = { id: string; email: string; created_at: string };
 export type TokenResponse = { access_token: string; token_type: string; expires_in: number };
 export type Portfolio = { id: string; name: string; base_currency: string; created_at: string; updated_at: string };
-export type Instrument = { id: string; canonical_symbol: string; exchange: string; asset_type: string; currency: string; sector: string | null };
-export type Holding = { id: string; quantity: string; average_cost: string; purchase_date: string | null; instrument: Instrument };
+export type Instrument = { id: string; canonical_symbol: string; display_name?: string | null; exchange: string; asset_type: string; currency: string; sector: string | null };
+export type BalanceAsset = { symbol: string; display_name: string; asset_type: string; currency: string; invested_amount: string | null; market_value: string; as_of: string | null; imported_at: string };
+export type Holding = { id: string; quantity: string; average_cost: string | null; source?: string; purchase_date: string | null; instrument: Instrument };
 export type HoldingAnalytics = {
   symbol: string; exchange: string; asset_type: string; sector: string | null; currency: string;
-  quantity: string; average_cost: string; cost_basis: string; current_price: string | null;
+  quantity: string; average_cost: string | null; cost_basis: string | null; current_price: string | null;
   market_value: string | null; unrealized_pl: string | null; market_allocation_pct: string | null;
   cost_basis_allocation_pct: string | null; price_as_of: string | null;
   price_status: "available" | "missing" | "currency_mismatch" | "stale" | "unknown_freshness";

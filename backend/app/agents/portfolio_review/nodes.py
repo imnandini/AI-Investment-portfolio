@@ -4,6 +4,7 @@ from app.agents.portfolio_review.report import Finding, ReviewReport
 from app.rag.retrieval import retrieve
 from app.schemas.research import SearchRequest
 from app.services.prices import require_portfolio, saved_prices
+from app.services.indmoney import list_balances
 from app.agents.portfolio_review.verification import evidence_gaps
 
 
@@ -11,9 +12,10 @@ def build_nodes(session, settings):
     def calculate(state):
         portfolio = require_portfolio(session, UUID(state["user_id"]), UUID(state["portfolio_id"]))
         result = calculate_portfolio_analytics(portfolio, saved_prices(session, portfolio.id))
-        targets = sorted(result.positions, key=lambda p: -p.cost_basis)[:5]
+        targets = sorted(result.positions, key=lambda p: -(p.cost_basis or 0))[:5]
+        balances = list_balances(session, UUID(state["user_id"]), portfolio.id)
         return {"analytics": result.model_dump(mode="json"), "targets": [p.symbol for p in targets],
-            "limitations": result.completeness_notes + ["Live market data and brokerage connections are disabled."],
+            "limitations": result.completeness_notes + (["PF balances are displayed separately and excluded from the security metrics and company research targets in this review."] if balances else []) + ["Reviews use saved holdings and prices. An INDmoney import is a point-in-time snapshot; continuous brokerage sync is unavailable."],
             "activities": ["Verified portfolio ownership", "Calculated portfolio metrics", "Selected up to five research targets"]}
 
     def research(state):

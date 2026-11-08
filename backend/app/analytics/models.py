@@ -43,8 +43,8 @@ class HoldingAnalytics(BaseModel):
     sector: str | None
     currency: str
     quantity: Decimal
-    average_cost: Decimal
-    cost_basis: Decimal
+    average_cost: Decimal | None
+    cost_basis: Decimal | None
     current_price: Decimal | None
     market_value: Decimal | None
     unrealized_pl: Decimal | None

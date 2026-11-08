@@ -8,6 +8,6 @@ For a trusted desktop client, run the project Python executable with `-m mcp_ser
 
 The review graph and chat share the same authorized service functions directly to avoid creating an MCP subprocess for each internal retrieval. MCP is the tested external-client boundary, not a required indirection for local calculations.
 
-INDmoney remains disabled under the existing decision in [data_sources.md](data_sources.md). No vendor client registration, OAuth consent, token or storage permission is assumed. CSV works independently of brokerage access.
+The separate [INDmoney integration](indmoney.md) uses the official remote Streamable HTTP endpoint with discovered OAuth metadata, dynamic client registration, PKCE and encrypted account-scoped tokens. `app/integrations/indmoney.py` is the remote client; `app/integrations/mcp_client.py` remains the local stdio client. Only remote `networth_holdings` is callable, with `portfolio:read` scope. CSV works independently of brokerage access. No account is connected until its owner completes consent.
 
 Official API references: [Python SDK v1](https://py.sdk.modelcontextprotocol.io/v1/), [SDK source and version policy](https://github.com/modelcontextprotocol/python-sdk/tree/v1.x). New deployments should review v2 migration separately rather than mixing incompatible API examples.

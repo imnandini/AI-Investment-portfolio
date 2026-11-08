@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, Date, ForeignKey, Index, Numeric, Uuid
+from sqlalchemy import CheckConstraint, Date, ForeignKey, Index, Numeric, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -25,7 +25,8 @@ class Holding(Base):
         Uuid(as_uuid=True), ForeignKey("instruments.id", ondelete="RESTRICT"), nullable=False
     )
     quantity: Mapped[Decimal] = mapped_column(Numeric(24, 10), nullable=False)
-    average_cost: Mapped[Decimal] = mapped_column(Numeric(24, 10), nullable=False)
+    average_cost: Mapped[Decimal | None] = mapped_column(Numeric(24, 10), nullable=True)
+    source: Mapped[str] = mapped_column(String(20), nullable=False, default="manual", server_default="manual")
     purchase_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     portfolio: Mapped["Portfolio"] = relationship(back_populates="holdings")

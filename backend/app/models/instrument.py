@@ -15,6 +15,7 @@ class Instrument(Base):
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     canonical_symbol: Mapped[str] = mapped_column(String(32), nullable=False)
+    display_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     exchange: Mapped[str] = mapped_column(String(32), nullable=False, default="UNKNOWN")
     asset_type: Mapped[str] = mapped_column(String(32), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
