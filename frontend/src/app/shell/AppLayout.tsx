@@ -7,7 +7,7 @@ const links = [
   { to: "/", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/portfolios", label: "Portfolios", icon: BriefcaseBusiness },
   { to: "/research", label: "Research", icon: BookOpenText },
-  { to: "/chat", label: "Research chat", icon: Command },
+  { to: "/chat", label: "Portfolio chat", icon: Command },
   { to: "/reviews", label: "Portfolio reviews", icon: Activity },
 ];
 

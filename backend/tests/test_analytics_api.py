@@ -17,7 +17,23 @@ def test_analytics_api_returns_methodology_and_missing_price_state(api_context):
     assert data["market_value_total"] is None
     assert data["complete"] is False
     assert data["positions"][0]["price_status"] == "missing"
-    assert "user-supplied price" in data["methodology"]
+    assert "saved price" in data["methodology"]
+
+
+def test_analytics_exposes_holding_and_weighted_portfolio_returns(api_context):
+    from datetime import datetime, timezone
+    client, _, portfolio, headers, _ = api_context
+    for symbol, quantity, cost in [("AAA", "2", "100"), ("BBB", "1", "200")]:
+        response = client.post(f"/portfolios/{portfolio.id}/holdings", headers=headers,
+                               json={"symbol": symbol, "exchange": "NSE", "quantity": quantity, "average_cost": cost})
+        assert response.status_code == 201
+    response = client.post(f"/portfolios/{portfolio.id}/analytics", headers=headers, json={"prices": [
+        {"symbol": symbol, "exchange": "NSE", "price": price, "currency": "INR", "as_of": datetime.now(timezone.utc).isoformat()}
+        for symbol, price in [("AAA", "125"), ("BBB", "180")]]})
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert [item["unrealized_return_pct"] for item in result["positions"]] == ["25.00", "-10.00"]
+    assert result["unrealized_return_pct"] == "7.50"
 
 
 def test_analytics_api_requires_auth_and_hides_other_users_portfolios(api_context):

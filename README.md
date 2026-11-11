@@ -9,14 +9,15 @@ The application combines exact portfolio calculations, public news, private docu
 | Feature | What it gives you |
 | --- | --- |
 | INDmoney connection | Read-only account sign-in, a named holdings preview, and an incremental import of the positions you review. |
-| Stocks and mutual funds | Quantities, recorded purchase cost, saved provider prices, and explicit price freshness. |
+| Stocks and mutual funds | Quantities, recorded purchase cost, automatic daily stock closes when enabled, saved provider prices, and explicit price freshness. |
+| Daily portfolio tracking | Dated Yahoo Finance closing-price history, automatic refresh and day/week comparisons for the current holdings. No daily manual entry or broker login. Personal-use opt-in. |
 | EPF and PPF | Reported account balances and invested amounts in a separate **PF balances** section. |
 | CSV import | A downloadable template, row-level validation, and support for up to 500 rows per file. |
 | Stock briefs | One-click **Pros, cons & news**: recent headlines, source-linked signals, why they matter, what to check next, and the holding's portfolio context. |
 | Portfolio opinion | A one-click view of single-name concentration, known sector exposure, missing data and company news. |
 | Private document research | Upload company reports, search relevant passages, and inspect page-level citations and original source links. |
 | Saved portfolio reviews | A bounded LangGraph workflow that calculates metrics, selects research targets, retrieves evidence and saves a report. |
-| Portfolio chat | Extractive answers drawn from matching documents with your saved portfolio context. |
+| Portfolio chat | Ask about overall portfolio health, allocation, saved gain/loss and recent company news. Uploaded documents are optional extra evidence. |
 | Read-only MCP | Typed tools for application research workflows, plus a separate official INDmoney connection. |
 
 The interface uses navy navigation, teal accents, larger body text, clear metric cards and responsive layouts. Briefs include fuller explanations and a practical reading plan. Reported facts, calculation-based observations and missing inputs remain distinguishable.
@@ -94,6 +95,17 @@ Single-name weights above 25% and known sector weights above 40% are review prom
 
 See [brief sources, methodology, limits and API endpoints](docs/research_briefs.md).
 
+## Ask about your portfolio
+
+Open **Portfolio chat** in the sidebar, or **Ask about holdings** on the portfolio page. Select a portfolio and ask a question; no document upload or model API key is required.
+
+- **Is my overall portfolio okay?** checks security concentration, known sector exposure, missing prices and recent equity news, using the same calculations as Portfolio opinion.
+- **What are my companies doing currently?** checks dated public news for up to ten saved equity holdings. Include a company's full saved name or symbol for a focused answer.
+- **How much is my portfolio worth?** or **What is my profit?** uses saved holdings and usable dated prices, with missing costs and prices reported explicitly. It does not calculate live quotes or daily/total investment returns.
+- **What is diversification?** explains a supported portfolio concept. Questions about uploaded reports still return matching passages with document citations.
+
+Answers retain their portfolio snapshot and news-check dates in chat history. News links show publishers and publication dates; feed failures remain visible. Routing and summaries are rules-based, not an unrestricted conversational model. The checks do not establish personal suitability or a buy/sell decision.
+
 ## Deeper research with documents
 
 Use **Research** beside a holding to open its document workspace. The holding reference is prefilled as the document tag and search filter, so matching documents can also be used by portfolio chat and reviews.
@@ -111,13 +123,16 @@ Portfolio calculations use Decimal arithmetic:
 - **Cost basis:** quantity × average purchase cost.
 - **Market value:** quantity × a matching supplied or saved price.
 - **Unrealized P/L:** market value − cost basis, when both are known.
+- **Unrealized return %:** (latest price − average purchase cost) ÷ average purchase cost × 100, with a usable dated price and positive known purchase cost. Each holding shows P/L and return %. The portfolio percentage uses total P/L ÷ total cost, rather than averaging holding percentages. These are cumulative price returns on current holdings, excluding dividends, realized trades, fees and taxes; they are not annualized or total investment returns.
 - **Market allocation:** each position's share of complete base-currency market value.
 - **Asset/sector mix:** known base-currency cost basis.
 - **Concentration index:** sum of squared market-allocation percentages, on a 0–10,000 scale.
 
-Manual reference prices can be entered in the app. They take precedence over saved INDmoney prices. Prices older than seven days, prices with no timestamp, and currency-mismatched prices are excluded from aggregate market metrics. There is no inferred FX conversion, estimated missing price or zero-filled missing purchase cost. PF account balances stay separate from security calculations.
+Enable `DAILY_PRICE_PROVIDER=yahoo` in the root `.env` for this personal app's automatic daily closes. The app fetches completed bars through yesterday and retains price history. Each holding shows the actual source, date and resolved exchange. Day/week comparisons revalue the current quantities at shared historical closes; they are not total investment returns. See [daily prices, coverage and comparison methodology](docs/daily_prices.md).
 
-A live statement or market-price provider is not enabled by default. Public news availability does not establish complete financial fundamentals or a current valuation.
+Manual reference prices remain available in a collapsed optional section. A newer automatic close replaces an old manual reference; newer dated manual/imported prices can still supply the current valuation. Prices older than seven days, prices with no timestamp, and currency-mismatched prices are excluded from aggregate market metrics. There is no inferred FX conversion, estimated missing price or zero-filled missing purchase cost. PF account balances stay separate from security calculations.
+
+Daily pricing is an unofficial Yahoo/yfinance personal-use integration and can be delayed or unavailable. Company fundamentals/profile lookup still has no licensed provider enabled. Public news availability does not establish complete financial fundamentals or a current valuation.
 
 ## Native development
 
@@ -158,6 +173,7 @@ Open **http://127.0.0.1:5173**. For INDmoney in native development, set `INDMONE
 | `INDMONEY_TOKEN_KEY` | Stable Fernet key for stored OAuth credentials and previews. |
 | `INDMONEY_REDIRECT_URI` | Exact portfolio-page callback URL for the frontend origin in use. |
 | `FINANCIAL_DATA_PROVIDER` | Defaults to `none`; unsupported adapters report unavailable data. |
+| `DAILY_PRICE_PROVIDER` | `yahoo` enables personal-use automatic daily closes; `none` disables new fetches. No key required. |
 | `EMBEDDING_PROVIDER` | Defaults to `hash`; optional local model configuration is documented separately. |
 | `CORS_ORIGINS` | Frontend origins accepted by the API. |
 | `POSTGRES_PORT` | Host port exposed by the local Docker database. |

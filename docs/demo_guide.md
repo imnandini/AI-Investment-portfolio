@@ -16,7 +16,7 @@ Open `http://127.0.0.1:8080`. API docs are at `http://127.0.0.1:8000/docs`. Back
 3. Observe cost basis and missing market metrics. Optionally save a manual reference price with the current local as-of time; it remains a user-entered figure.
 4. In Research, upload `sample_data/synthetic_report.pdf` with company `AAA`, kind `annual_report`, period `FY2026`, and a title beginning **SYNTHETIC**. The PDF is clearly labeled and is not a real filing.
 5. Search `revenue risk`, inspect page citations, then search `zebra astrophysics` to see insufficient evidence. Company lookup explicitly shows that provider data/trends are unavailable.
-6. Open Research chat, select the portfolio and ask `revenue risk`. Inspect portfolio context, activity and source passages.
+6. Open Portfolio chat and select the portfolio. Ask `Is my overall portfolio okay?` or `What are my companies doing currently?` without uploading any documents. For the synthetic uploaded report, ask `What do my uploaded reports say about revenue risk?` and inspect the source passages. News needs a real company name; the fictional AAA holding may have no matching coverage.
 7. Start a Portfolio review, inspect calculation/source/data-gap findings, and reload to reopen its saved report. Without live feeds, results remain partial with explicit limitations.
 8. Delete the document to remove its chunks and saved research history. For full cleanup, use authenticated `DELETE /auth/me` for this disposable account.
 

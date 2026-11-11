@@ -7,6 +7,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:-local-development-key-change-before-production}
       CORS_ORIGINS: '["http://localhost:8080","http://127.0.0.1:8080"]'
       FINANCIAL_DATA_PROVIDER: none
+      DAILY_PRICE_PROVIDER: ${DAILY_PRICE_PROVIDER:-none}
       EMBEDDING_PROVIDER: hash
       INTERNAL_API_URL: http://127.0.0.1:8000
       LANGSMITH_TRACING: 'false'

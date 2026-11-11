@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
     financial_data_provider: str = "none"
     financial_data_timeout_seconds: float = 5.0
+    daily_price_provider: Literal["yahoo", "none"] = "none"
     embedding_provider: Literal["hash", "sentence_transformers", "none"] = "hash"
     embedding_model_path: str = ""
     reranker_model_path: str = ""

@@ -1,5 +1,7 @@
 # Indian market data and disclosure sources
 
+**Personal-app update — 11 November 2026:** the owner selected Yahoo Finance for automatic daily prices in this local personal app. The opt-in `DAILY_PRICE_PROVIDER=yahoo` integration uses `yfinance`, with no API key or broker login. This supersedes the no-provider decision below only for this personal daily-close path. Company fundamentals/profile lookup remains disabled. This is an unofficial personal-use source, not a licensed feed for commercial redistribution. See [daily pricing](daily_prices.md) and the [yfinance source](https://github.com/ranaroussi/yfinance).
+
 **Decision record — 5 November 2026; provider disabled by product decision — 6 November 2026**
 **Status: no market-data provider selected; continue with manual prices and CSV holdings.**
 

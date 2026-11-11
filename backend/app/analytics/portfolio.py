@@ -67,6 +67,7 @@ def calculate_portfolio_analytics(
         current_price = None
         market_value = None
         unrealized_pl = None
+        unrealized_return_pct = None
         price_as_of = None
         if quote is not None:
             if quote.currency != instrument.currency:
@@ -82,6 +83,10 @@ def calculate_portfolio_analytics(
                     price_status = "stale"
                 else:
                     price_status = "available"
+                if price_status == "available" and average_cost is not None and average_cost > 0:
+                    # Quantity cancels from value/cost. Use unrounded unit
+                    # prices so fractional positions retain an accurate rate.
+                    unrealized_return_pct = _pct(quote.price - average_cost, average_cost)
                 if instrument.currency == portfolio.base_currency and price_status == "available":
                     market_total += market_value
                 else:
@@ -102,10 +107,14 @@ def calculate_portfolio_analytics(
                 current_price=current_price,
                 market_value=market_value,
                 unrealized_pl=unrealized_pl,
+                unrealized_return_pct=unrealized_return_pct,
                 market_allocation_pct=None,
                 cost_basis_allocation_pct=None,
                 price_as_of=price_as_of,
                 price_status=price_status,
+                price_source=quote.source if quote else None,
+                price_kind=quote.kind if quote else None,
+                price_exchange=quote.source_exchange if quote else None,
             )
         )
 
@@ -118,6 +127,7 @@ def calculate_portfolio_analytics(
         if base_market_total is not None and base_cost_total is not None
         else None
     )
+    return_pct = _pct(pl_total, base_cost_total) if pl_total is not None and base_cost_total is not None and base_cost_total > 0 else None
 
     if base_market_total is not None and base_market_total > 0:
         for position in positions:
@@ -176,15 +186,17 @@ def calculate_portfolio_analytics(
         portfolio_id=str(portfolio.id if isinstance(portfolio.id, UUID) else portfolio.id),
         base_currency=portfolio.base_currency,
         methodology=(
-            "Cost basis = quantity × average cost. Market value = quantity × user-supplied price. "
+            "Cost basis = quantity × average cost. Market value = quantity × saved price. "
             "Unrealized P/L = market value − cost basis. Market allocation uses complete base-currency market value; "
+            "Unrealized return % = (latest price - average purchase cost) / average purchase cost × 100, with a usable dated price and positive known cost. Portfolio return % uses total unrealized P/L / total cost basis × 100, not an average of holding returns. These are cumulative price returns on current holdings, not annualized or total returns; dividends, realized trades, fees and taxes are excluded. "
             "asset and sector mix use base-currency cost basis. Prices older than 7 days or without an as-of timestamp "
-            "are excluded from aggregate market metrics. Saved INDmoney prices are also supported; missing purchase costs stay unknown. Concentration index is the sum of squared "
+            "are excluded from aggregate market metrics. Prices can be automatic daily closes, INDmoney quotes or manual references; their source and date are shown. Missing purchase costs stay unknown. Concentration index is the sum of squared "
             "market-allocation percentages (0–10,000). No FX conversion or missing-price estimate is applied."
         ),
         cost_basis_total=base_cost_total,
         market_value_total=base_market_total,
         unrealized_pl_total=pl_total,
+        unrealized_return_pct=return_pct,
         largest_holding_symbol=largest,
         largest_holding_allocation_pct=largest_allocation,
         concentration_index=concentration_index,

@@ -13,16 +13,22 @@ export type HoldingAnalytics = {
   symbol: string; exchange: string; asset_type: string; sector: string | null; currency: string;
   quantity: string; average_cost: string | null; cost_basis: string | null; current_price: string | null;
   market_value: string | null; unrealized_pl: string | null; market_allocation_pct: string | null;
+  unrealized_return_pct: string | null;
   cost_basis_allocation_pct: string | null; price_as_of: string | null;
   price_status: "available" | "missing" | "currency_mismatch" | "stale" | "unknown_freshness";
+  price_source?: string | null; price_kind?: "reference" | "daily_close" | null; price_exchange?: string | null;
 };
+export type PriceComparison = { label: string; from_date: string; to_date: string; previous_value: string; latest_value: string; change: string; change_pct: string | null };
+export type DailyPriceOverview = { configured: boolean; provider: string; requested_through: string; latest_date: string | null; checked_at: string | null; covered_positions: number; position_count: number; notes: string[]; comparisons: PriceComparison[]; comparison_basis: string };
 export type MixEntry = { name: string; cost_basis: string; allocation_pct: string | null };
 export type PortfolioAnalytics = {
   portfolio_id: string; base_currency: string; methodology: string; cost_basis_total: string | null;
   market_value_total: string | null; unrealized_pl_total: string | null; largest_holding_symbol: string | null;
+  unrealized_return_pct: string | null;
   largest_holding_allocation_pct: string | null; concentration_index: string | null; asset_mix: MixEntry[];
   sector_mix: MixEntry[]; positions: HoldingAnalytics[]; priced_position_count: number;
   unpriced_position_count: number; complete: boolean; completeness_notes: string[];
+  daily_prices?: DailyPriceOverview | null;
 };
 export type ImportResult = { imported_count: number; errors: { row: number; field: string | null; message: string }[]; holdings: Holding[] };
 

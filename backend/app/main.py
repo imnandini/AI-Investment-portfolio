@@ -1,5 +1,6 @@
 ﻿from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+import asyncio
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,15 +22,23 @@ from app.api.briefs import router as briefs_router
 from app.middleware.security import SecurityMiddleware
 from app.core.config import get_settings
 from app.db.session import dispose_database, initialize_database
+from app.services.daily_prices import run_daily_price_updates
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     """Own the shared database engine for the lifetime of the application."""
-    initialize_database(get_settings())
+    runtime_settings = get_settings()
+    engine = initialize_database(runtime_settings)
+    worker = None
+    if runtime_settings.daily_price_provider == "yahoo" and not _.dependency_overrides:
+        worker = asyncio.create_task(run_daily_price_updates(engine, runtime_settings))
     try:
         yield
     finally:
+        if worker:
+            worker.cancel()
+            await asyncio.gather(worker, return_exceptions=True)
         dispose_database()
 
 

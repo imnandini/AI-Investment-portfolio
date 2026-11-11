@@ -5,7 +5,8 @@ import { AllocationList, formatMoney } from "../components/AllocationList";
 import { ApiStatus } from "../components/ApiStatus";
 import { AuthGate } from "../components/AuthGate";
 import { StatePanel } from "../components/StatePanel";
-import { apiGet, apiPost, type Portfolio, type PortfolioAnalytics } from "../services/api";
+import { HoldingReturn, formatReturn } from "../components/HoldingReturn";
+import { apiGet, apiPost, type Holding, type Portfolio, type PortfolioAnalytics } from "../services/api";
 
 const steps = [
   { n: "01", icon: FileUp, title: "Bring your investments together", text: "Connect INDmoney or import a CSV. Track stocks and funds by name, with provident fund balances in their own account view.", to: "/portfolios", link: "Open your portfolio" },
@@ -16,6 +17,7 @@ const steps = [
 function DashboardSummary() {
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [analytics, setAnalytics] = useState<PortfolioAnalytics | null>(null);
+  const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -25,8 +27,11 @@ function DashboardSummary() {
       const first = items[0];
       if (!first) return;
       setPortfolio(first);
-      const summary = await apiPost<PortfolioAnalytics>(`/portfolios/${first.id}/analytics`, { prices: [] });
-      if (active) setAnalytics(summary);
+      const [summary, positions] = await Promise.all([
+        apiPost<PortfolioAnalytics>(`/portfolios/${first.id}/analytics`, { prices: [] }),
+        apiGet<Holding[]>(`/portfolios/${first.id}/holdings`),
+      ]);
+      if (active) { setAnalytics(summary); setHoldings(positions); }
     }).catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Could not load the portfolio summary."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -38,8 +43,29 @@ function DashboardSummary() {
 
   return <div className="dashboard-summary-content">
     <div className="dashboard-total-row"><div><span className="summary-label">{portfolio.name} · COST BASIS</span><strong>{formatMoney(analytics.cost_basis_total, analytics.base_currency)}</strong></div><span className={`completion-chip${analytics.complete ? " complete" : " partial"}`}>{analytics.complete ? "Market data complete" : `${analytics.unpriced_position_count} prices missing`}</span></div>
-    <div className="dashboard-quick-metrics"><div><span>Market value</span><b>{formatMoney(analytics.market_value_total, analytics.base_currency)}</b></div><div><span>Unrealized P/L</span><b>{formatMoney(analytics.unrealized_pl_total, analytics.base_currency)}</b></div><div><span>Positions</span><b>{analytics.positions.length}</b></div></div>
+    <div className="dashboard-quick-metrics">
+      <div><span>Market value</span><b>{formatMoney(analytics.market_value_total, analytics.base_currency)}</b></div>
+      <div><span>Unrealized P/L</span><b>{formatMoney(analytics.unrealized_pl_total, analytics.base_currency)}</b></div>
+      <div><span>Return %</span><b>{formatReturn(analytics.unrealized_return_pct)}</b></div>
+      <div><span>Positions</span><b>{analytics.positions.length}</b></div>
+    </div>
+    <section className="dashboard-holdings" aria-label="Portfolio holdings">
+      <h3>Holdings in {portfolio.name}</h3>
+      <div className="table-scroll"><table><thead><tr><th>Investment</th><th>Market value</th><th>Unrealized P/L</th><th>Return %</th></tr></thead><tbody>
+        {analytics.positions.map(position => {
+          const holding = holdings.find(item => item.instrument.canonical_symbol === position.symbol && item.instrument.exchange === position.exchange);
+          const name = holding?.instrument.display_name || position.symbol;
+          return <tr key={`${position.symbol}:${position.exchange}`}>
+            <td><b>{name}</b><small>{position.price_as_of ? `Price date: ${new Date(position.price_as_of).toLocaleDateString()}` : "Price date unavailable"}</small></td>
+            <td>{formatMoney(position.price_status === "available" ? position.market_value : null, position.currency)}</td>
+            <HoldingReturn position={position} currency={position.currency} />
+          </tr>;
+        })}
+      </tbody></table></div>
+      <p>Return % measures the unrealized price change on your current holdings' purchase cost. It excludes dividends, realized trades, fees and taxes and is not annualized.</p>
+    </section>
     <AllocationList title="Sector allocation" entries={analytics.sector_mix} currency={analytics.base_currency} />
+    {analytics.sector_mix.some(item => item.name === "Unknown") && <p className="dashboard-sector-note">“Unknown” means sector information has not been supplied for those holdings. Individual investments are listed above.</p>}
     {!analytics.complete && <p className="dashboard-freshness"><AlertCircle size={13} />Market value and market allocation need fresh matching prices.</p>}
     <Link to="/portfolios" className="text-link">View holdings and price status<ArrowRight size={14} /></Link>
   </div>;
@@ -53,7 +79,7 @@ function DashboardContent() {
   return <div className="dashboard-page">
     <section className="welcome-row"><div><div className="eyebrow"><span className="eyebrow-line" /> A CLEARER PERSPECTIVE ON YOUR MONEY</div><h1>Own your investments.<br className="desktop-break" /><em>Understand the bigger picture.</em></h1><p className="welcome-copy">Your holdings, company news and research in one workspace. See what is driving the conversation, where your portfolio is concentrated, and what deserves a closer look.</p><Link className="button button-primary welcome-cta" to="/portfolios">Explore your portfolio<ArrowRight size={17} /></Link></div><div className="welcome-art" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="orbit-core"><Sparkles size={31} /></div><span className="orbit-point point-one" /><span className="orbit-point point-two" /></div></section>
 
-    <section className="notice-card"><div className="notice-symbol"><ShieldCheck size={19} /></div><div className="notice-copy"><b>Your data, your context</b><p>Calculations use the holdings and prices you provide. Missing or stale inputs stay visible.</p></div><span className="notice-tag"><Fingerprint size={13} /> PRIVATE BY DESIGN</span></section>
+    <section className="notice-card"><div className="notice-symbol"><ShieldCheck size={19} /></div><div className="notice-copy"><b>Your data, your context</b><p>Calculations use saved holdings and dated prices. Missing or stale inputs stay visible.</p></div><span className="notice-tag"><Fingerprint size={13} /> PRIVATE BY DESIGN</span></section>
 
     <div className="section-heading"><div><span className="section-kicker">GETTING STARTED</span><h2>Your next steps</h2></div><span className="muted-caption">A simple path to your first review</span></div>
     <section className="step-grid" aria-label="Getting started">
@@ -61,7 +87,7 @@ function DashboardContent() {
     </section>
 
     <section className="overview-grid">
-      <div className="surface-card portfolio-overview"><div className="card-heading"><div><span className="section-kicker">PORTFOLIO SNAPSHOT</span><h2>Your portfolio</h2></div><span className="subtle-badge">LIVE FROM YOUR DATA</span></div><DashboardSummary /></div>
+      <div className="surface-card portfolio-overview"><div className="card-heading"><div><span className="section-kicker">PORTFOLIO SNAPSHOT</span><h2>Your portfolio</h2></div><span className="subtle-badge">YOUR SAVED HOLDINGS</span></div><DashboardSummary /></div>
       <div className="surface-card connection-card"><div className="card-heading"><div><span className="section-kicker">CONNECTED WORKSPACE</span><h2>Ready for your next question</h2></div><span className="connection-pulse" /></div><p className="connection-intro">Open a stock brief directly from your holdings for news and source-linked signals. Use portfolio opinion to put individual positions into the context of the whole portfolio.</p><ApiStatus /><div className="connection-foot"><span>Research starts with your holdings</span><Link to="/portfolios" className="text-link">Open portfolio<ArrowRight size={15} /></Link></div></div>
     </section>
     <div className="bottom-note"><span className="bottom-note-mark">i</span><span>This workspace is a research aid. It does not place trades or promise investment outcomes.</span></div>

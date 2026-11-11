@@ -188,7 +188,18 @@ tbody tr:hover { background: #f8fbfc; }
 .summary-label { font-size: 11px; color: #617f8e; }
 .dashboard-total-row strong { font-size: 32px; color: #194259; }
 .completion-chip { font-size: 11px; }
-.dashboard-quick-metrics { gap: 15px; padding: 20px 0; margin: 20px 0; }
+.dashboard-quick-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; padding: 20px 0; margin: 20px 0; }
+.dashboard-holdings { margin: 24px 0; }
+.dashboard-holdings h3 { font-size: 18px; color: #194259; }
+.dashboard-holdings table { width: 100%; border-collapse: collapse; text-align: left; }
+.dashboard-holdings th, .dashboard-holdings td { padding: 14px 10px; border-bottom: 1px solid #e1e9ed; font-size: 13px; vertical-align: top; }
+.dashboard-holdings th { color: #617f8e; font-weight: 500; white-space: nowrap; }
+.dashboard-holdings td:first-child { min-width: 170px; }
+.dashboard-holdings td:not(:first-child) { white-space: nowrap; }
+.dashboard-holdings small { display: block; margin-top: 6px; color: #617f8e; font-size: 11px; }
+.dashboard-holdings p, .dashboard-sector-note { color: #617f8e; font-size: 12px; line-height: 1.6; }
+.dashboard-holdings .return-positive { color: #087a63; }
+.dashboard-holdings .return-negative { color: #b34343; }
 .dashboard-quick-metrics span { font-size: 12px; }
 .dashboard-quick-metrics b { font-size: 16px; color: #2f566b; }
 .dashboard-freshness { font-size: 12px; line-height: 1.7; }

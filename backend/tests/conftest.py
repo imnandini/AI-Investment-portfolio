@@ -37,7 +37,7 @@ def db_session() -> Iterator[Session]:
 
 @pytest.fixture
 def api_context(db_session: Session):
-    settings = Settings(secret_key="test-secret-key-with-more-than-32-characters")
+    settings = Settings(secret_key="test-secret-key-with-more-than-32-characters", daily_price_provider="none")
     user = User(email="owner@example.com", password_hash="unused")
     db_session.add(user)
     db_session.flush()

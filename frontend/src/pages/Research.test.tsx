@@ -71,9 +71,35 @@ describe("research flows", () => {
     vi.mocked(apiGet).mockImplementation(async path => path === "/portfolios" ? [{ id: "p1", name: "My portfolio" }] : []);
     vi.mocked(apiPost).mockRejectedValue(new Error("Search service unavailable"));
     render(<ResearchChatPage />);
-    await waitFor(() => expect((screen.getByRole("button", { name: "Ask question" }) as HTMLButtonElement).disabled).toBe(false));
+    await waitFor(() => expect((screen.getByLabelText("Your question") as HTMLTextAreaElement).disabled).toBe(false));
     await userEvent.type(screen.getByLabelText("Your question"), "What is revenue?");
     await userEvent.click(screen.getByRole("button", { name: "Ask question" }));
     expect((await screen.findByRole("alert")).textContent).toBe("Search service unavailable");
+  });
+  it("asks a portfolio question without uploaded documents and displays dated news sources", async () => {
+    vi.mocked(apiGet).mockImplementation(async path => path === "/portfolios" ? [{ id: "p1", name: "My portfolio" }] : []);
+    vi.mocked(apiPost).mockResolvedValue({ id: "c1", question: "Is my overall portfolio okay?", created_at: "2026-11-11T10:00:00Z", response: {
+      answer: "Acme represents 80% of security cost basis. Concentration deserves attention.",
+      status: "supported", method: "portfolio-chat-v1", evidence: [], activities: ["Calculated saved metrics"], limitations: ["Prices are incomplete"],
+      portfolio_context: { name: "My portfolio", position_count: 2, cost_basis: "1000", currency: "INR" },
+      news: [{ name: "Acme", symbol: "ACME", status: "available", checked_at: "2026-11-11T09:00:00Z", cached: false, note: "Matched headlines", provider: "Example feed",
+        articles: [{ id: "news-1", title: "Acme reports quarterly results", url: "https://example.org/results", publisher: "Example News", published_at: "2026-11-10T09:00:00Z" }] }],
+    } });
+    render(<ResearchChatPage />);
+    expect(screen.getByText(/No document upload needed/)).toBeTruthy();
+    const starter = screen.getByRole("button", { name: "Is my overall portfolio okay?" });
+    await waitFor(() => expect((starter as HTMLButtonElement).disabled).toBe(false));
+    await userEvent.click(starter);
+    expect((screen.getByLabelText("Your question") as HTMLTextAreaElement).value).toBe("Is my overall portfolio okay?");
+    await userEvent.click(screen.getByRole("button", { name: "Ask question" }));
+    await screen.findByText(/Acme represents 80%/);
+    expect(apiPost).toHaveBeenCalledWith("/portfolios/p1/chat", { question: "Is my overall portfolio okay?" });
+    const source = screen.getByRole("link", { name: "Acme reports quarterly results" });
+    expect(source.getAttribute("href")).toBe("https://example.org/results");
+    expect(source.getAttribute("rel")).toContain("noopener");
+    expect(screen.getByText(/Example News · Published/)).toBeTruthy();
+    expect(screen.queryByText("No supporting passages found.")).toBeNull();
+    await userEvent.click(screen.getByText("Data gaps & limitations"));
+    expect(screen.getByText("Prices are incomplete")).toBeTruthy();
   });
 });

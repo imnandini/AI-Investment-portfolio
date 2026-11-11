@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from app.schemas.daily_prices import DailyPriceOverview
 
 
 Currency = Annotated[str, StringConstraints(pattern=r"^[A-Za-z]{3}$", min_length=3, max_length=3)]
@@ -14,6 +15,9 @@ class PriceInput(BaseModel):
     price: Decimal = Field(gt=0, max_digits=24, decimal_places=10)
     currency: Currency
     as_of: datetime | None = None
+    source: str = "manual"
+    kind: Literal["reference", "daily_close"] = "reference"
+    source_exchange: str | None = None
 
     @field_validator("symbol", "exchange")
     @classmethod
@@ -48,10 +52,14 @@ class HoldingAnalytics(BaseModel):
     current_price: Decimal | None
     market_value: Decimal | None
     unrealized_pl: Decimal | None
+    unrealized_return_pct: Decimal | None = None
     market_allocation_pct: Decimal | None
     cost_basis_allocation_pct: Decimal | None
     price_as_of: datetime | None
     price_status: Literal["available", "missing", "currency_mismatch", "stale", "unknown_freshness"]
+    price_source: str | None = None
+    price_kind: str | None = None
+    price_exchange: str | None = None
 
 
 class MixEntry(BaseModel):
@@ -69,6 +77,7 @@ class PortfolioAnalytics(BaseModel):
     cost_basis_total: Decimal | None
     market_value_total: Decimal | None
     unrealized_pl_total: Decimal | None
+    unrealized_return_pct: Decimal | None = None
     largest_holding_symbol: str | None
     largest_holding_allocation_pct: Decimal | None
     concentration_index: Decimal | None
@@ -79,3 +88,4 @@ class PortfolioAnalytics(BaseModel):
     unpriced_position_count: int
     complete: bool
     completeness_notes: list[str]
+    daily_prices: DailyPriceOverview | None = None

@@ -15,6 +15,7 @@ from app.rag.retrieval import retrieve
 from app.schemas.research import SearchRequest
 from app.services.indmoney import list_balances
 from app.services.prices import require_portfolio, saved_prices
+from app.services.daily_prices import ensure_daily_prices
 
 METRIC_MODIFIERS = r"(?:\s+(?:is|was|has|have|had|after|before|tax|net|quarterly|annual|operating|adjusted|consolidated|standalone|in|q[1-4])){0,4}\s+"
 POSITIVE = [
@@ -119,6 +120,7 @@ async def holding_brief(session, settings, user_id, portfolio_id, holding_id):
         raise HTTPException(404, "Holding not found in this portfolio.")
     if holding.instrument.asset_type.upper() not in ("EQUITY", "STOCK"):
         raise HTTPException(422, "Stock briefs are available for equity holdings. Use document research for funds and PF accounts.")
+    await ensure_daily_prices(session, portfolio, settings)
     metrics = calculate_portfolio_analytics(portfolio, saved_prices(session, portfolio_id))
     evidence, doc_issue = document_evidence(session, settings, user_id, holding.instrument.canonical_symbol)
     news = await company_news(holding.instrument.display_name or holding.instrument.canonical_symbol, holding.instrument.currency)
@@ -127,6 +129,7 @@ async def holding_brief(session, settings, user_id, portfolio_id, holding_id):
 
 async def portfolio_brief(session, settings, user_id, portfolio_id):
     portfolio = require_portfolio(session, user_id, portfolio_id)
+    await ensure_daily_prices(session, portfolio, settings)
     metrics = calculate_portfolio_analytics(portfolio, saved_prices(session, portfolio_id))
     names = {h.instrument.canonical_symbol: h.instrument.display_name or h.instrument.canonical_symbol for h in portfolio.holdings}
     balances = list_balances(session, user_id, portfolio_id)

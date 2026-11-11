@@ -38,8 +38,8 @@ test("account, holdings, source search, chat and saved review", async ({ page })
   await expect(page.getByText(/Relevant source passages:/)).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: "../evaluation/reports/research-desktop.png", fullPage: true });
-  await page.getByRole("link", { name: "Research chat", exact: true }).click();
-  await page.getByLabel("Your question").fill("revenue risk");
+  await page.getByRole("link", { name: "Portfolio chat", exact: true }).click();
+  await page.getByLabel("Your question").fill("What do my uploaded reports say about revenue risk?");
   await page.getByRole("button", { name: "Ask question" }).click();
   await expect(page.getByText(/Relevant source passages:/)).toBeVisible();
   await page.getByRole("link", { name: "Portfolio reviews", exact: true }).click();

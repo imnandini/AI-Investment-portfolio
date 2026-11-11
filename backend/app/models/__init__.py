@@ -7,5 +7,6 @@ from app.models.document import Document
 from app.models.document_chunk import DocumentChunk
 from app.models.review import ChatMessage, PortfolioReview
 from app.models.indmoney import IndmoneyBalance, IndmoneyConnection, IndmoneyPreview, IndmoneyPrice
+from app.models.daily_price import DailyPrice, DailyPriceSync
 
 __all__ = ["Holding", "Instrument", "Portfolio", "User"]

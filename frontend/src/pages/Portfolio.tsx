@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormE
 import { AlertCircle, ArrowUpRight, BriefcaseBusiness, Check, FileUp, LoaderCircle, Plus, RefreshCw, Sparkles, Upload, X } from "lucide-react";
 import { AuthGate } from "../components/AuthGate";
 import { ManualPrices } from "../components/ManualPrices";
+import { DailyPrices } from "../components/DailyPrices";
+import { HoldingReturn, formatReturn } from "../components/HoldingReturn";
 import { HoldingResearchLink } from "../components/HoldingResearchLink";
 import { PfBalances } from "../components/PfBalances";
 import { ResearchBriefPanel } from "../components/ResearchBriefPanel";
@@ -83,6 +85,17 @@ function PortfolioWorkspace() {
   }, [selectedId, loading]);
 
   const selected = portfolios.find((portfolio) => portfolio.id === selectedId);
+  useEffect(() => {
+    if (!selectedId || loading || busy) return;
+    let active = true;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      apiPost<PortfolioAnalytics>(`/portfolios/${selectedId}/analytics`, { prices: [] })
+        .then(summary => { if (active) setAnalytics(summary); })
+        .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Could not check daily prices."); });
+    }, 60000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [selectedId, loading, busy]);
   const positionByKey = useMemo(() => new Map((analytics?.positions ?? []).map((position) => [`${position.symbol}:${position.exchange}`, position])), [analytics]);
 
   async function createPortfolio(event: FormEvent<HTMLFormElement>) {
@@ -158,12 +171,13 @@ function PortfolioWorkspace() {
       <p className="portfolio-metric-scope">Security metrics below cover stocks and funds. PF account balances appear separately below Holdings.</p>
       {analytics && <div className="portfolio-metrics">
         <article className="metric-card"><span>Cost basis</span><strong>{formatMoney(analytics.cost_basis_total, analytics.base_currency)}</strong><small>Backend calculated · {holdings.length} positions</small></article>
-        <article className="metric-card"><span>Market value</span><strong>{formatMoney(analytics.market_value_total, analytics.base_currency)}</strong><small>{analytics.complete ? "Complete with fresh matching prices" : "Incomplete · price inputs needed"}</small></article>
-        <article className="metric-card"><span>Unrealized P/L</span><strong>{formatMoney(analytics.unrealized_pl_total, analytics.base_currency)}</strong><small>Shown when market values are complete</small></article>
+        <article className="metric-card"><span>Market value</span><strong>{formatMoney(analytics.market_value_total, analytics.base_currency)}</strong><small>{analytics.complete ? "Based on dated saved prices" : "Incomplete · some prices unavailable"}</small></article>
+        <article className="metric-card"><span>Unrealized P/L</span><strong>{formatMoney(analytics.unrealized_pl_total, analytics.base_currency)}</strong><small>{analytics.unrealized_return_pct != null ? `${formatReturn(analytics.unrealized_return_pct)} on recorded cost` : "Shown when market values are complete"}</small></article>
         <article className="metric-card"><span>Price coverage</span><strong>{analytics.priced_position_count} / {holdings.length}</strong><small>{analytics.unpriced_position_count} positions need a usable price</small></article>
       </div>}
 
       {analytics && analytics.completeness_notes.length > 0 && <div className="freshness-note"><AlertCircle size={15} /><div><b>Market metrics are partial</b><p>{analytics.completeness_notes.join(" ")}</p></div></div>}
+      <DailyPrices overview={analytics?.daily_prices} currency={selected?.base_currency ?? "INR"} />
 
       <div className="allocation-grid">
         <AllocationList title="By asset type" entries={analytics?.asset_mix ?? []} currency={selected?.base_currency ?? "INR"} />
@@ -171,19 +185,20 @@ function PortfolioWorkspace() {
       </div>
 
       <section className="surface-card positions-card"><div className="table-heading"><div><span className="section-kicker">POSITIONS</span><h2>Holdings</h2></div><span className="table-caption">Cost basis from quantity × average cost</span></div>
-        {holdings.length === 0 ? <div className="holdings-empty"><BriefcaseBusiness size={20} /><b>No securities in this portfolio</b><p>Connect INDmoney or import the CSV template to add positions. Imported PF accounts appear below.</p></div> : <div className="table-scroll"><table><thead><tr><th>Instrument</th><th>Quantity</th><th>Avg. cost</th><th>Cost basis</th><th>Current price</th><th>Market value</th><th>Allocation</th><th>Price freshness</th><th>Research</th></tr></thead><tbody>
+        {holdings.length === 0 ? <div className="holdings-empty"><BriefcaseBusiness size={20} /><b>No securities in this portfolio</b><p>Connect INDmoney or import the CSV template to add positions. Imported PF accounts appear below.</p></div> : <div className="table-scroll"><table><thead><tr><th>Instrument</th><th>Quantity</th><th>Avg. cost</th><th>Cost basis</th><th>Latest price</th><th>Market value</th><th>Unrealized P/L</th><th>Return %</th><th>Allocation</th><th>Price freshness</th><th>Research</th></tr></thead><tbody>
           {holdings.map((holding) => {
             const key = `${holding.instrument.canonical_symbol}:${holding.instrument.exchange}`;
             const position = positionByKey.get(key);
             const status = position?.price_status ?? "missing";
             const name = holding.instrument.display_name || holding.instrument.canonical_symbol;
-            return <tr key={holding.id}><td><b>{name}</b>{holding.instrument.display_name && <small>Reference: {holding.instrument.canonical_symbol}</small>}<small>{holding.instrument.exchange === "UNKNOWN" ? "Exchange not supplied" : holding.instrument.exchange} · {holding.instrument.asset_type}{holding.instrument.sector ? ` · ${holding.instrument.sector}` : ""}</small></td><td>{formatQuantity(holding.quantity)}</td><td>{formatMoney(holding.average_cost, holding.instrument.currency)}</td><td>{formatMoney(position?.cost_basis ?? null, holding.instrument.currency)}</td><td>{formatMoney(position?.current_price ?? null, holding.instrument.currency)}</td><td>{formatMoney(position?.market_value ?? null, holding.instrument.currency)}</td><td>{position?.market_allocation_pct !== null && position?.market_allocation_pct !== undefined ? `${Number(position.market_allocation_pct).toFixed(1)}%` : position?.cost_basis_allocation_pct != null ? `${Number(position.cost_basis_allocation_pct).toFixed(1)}% cost` : "—"}</td><td><span className={`freshness-pill freshness-${status}`}>{status === "unknown_freshness" ? "Price date not supplied" : status.replaceAll("_", " ")}</span>{position?.price_as_of && <small>{new Date(position.price_as_of).toLocaleDateString()}</small>}</td><td><div className="holding-research-actions">{["EQUITY", "STOCK"].includes(holding.instrument.asset_type.toUpperCase()) && <button className="button button-primary" aria-label={`Pros, cons and news for ${name}`} onClick={() => openBrief(name, holding.id)}>Pros, cons &amp; news</button>}<HoldingResearchLink symbol={holding.instrument.canonical_symbol} name={name} exchange={holding.instrument.exchange} /></div></td></tr>;
+            return <tr key={holding.id}><td><b>{name}</b>{holding.instrument.display_name && <small>Reference: {holding.instrument.canonical_symbol}</small>}<small>{holding.instrument.exchange === "UNKNOWN" ? "Exchange not supplied" : holding.instrument.exchange} · {holding.instrument.asset_type}{holding.instrument.sector ? ` · ${holding.instrument.sector}` : ""}</small></td><td>{formatQuantity(holding.quantity)}</td><td>{formatMoney(holding.average_cost, holding.instrument.currency)}</td><td>{formatMoney(position?.cost_basis ?? null, holding.instrument.currency)}</td><td>{formatMoney(position?.current_price ?? null, holding.instrument.currency)}</td><td>{formatMoney(position?.market_value ?? null, holding.instrument.currency)}</td><HoldingReturn position={position} currency={holding.instrument.currency} /><td>{position?.market_allocation_pct !== null && position?.market_allocation_pct !== undefined ? `${Number(position.market_allocation_pct).toFixed(1)}%` : position?.cost_basis_allocation_pct != null ? `${Number(position.cost_basis_allocation_pct).toFixed(1)}% cost` : "—"}</td><td><span className={`freshness-pill freshness-${status}`}>{position?.price_kind === "daily_close" && status === "available" ? "Daily close" : status === "unknown_freshness" ? "Price date not supplied" : status.replaceAll("_", " ")}</span>{position?.price_as_of && <small>{new Date(position.price_as_of).toLocaleDateString()}</small>}{position?.price_source && <small>{position.price_source}{position.price_exchange ? ` · ${position.price_exchange}` : ""}</small>}</td><td><div className="holding-research-actions">{["EQUITY", "STOCK"].includes(holding.instrument.asset_type.toUpperCase()) && <button className="button button-primary" aria-label={`Pros, cons and news for ${name}`} onClick={() => openBrief(name, holding.id)}>Pros, cons &amp; news</button>}<HoldingResearchLink symbol={holding.instrument.canonical_symbol} name={name} exchange={holding.instrument.exchange} /></div></td></tr>;
           })}
         </tbody></table></div>}
       </section>
       <PfBalances balances={balances} />
+      <p className="portfolio-methodology">Return % is the cumulative price change from your average purchase cost to the displayed price date. It excludes dividends, realized trades, fees and taxes and is not annualized.</p>
       <p className="portfolio-methodology">{analytics?.methodology}</p>
-      <ManualPrices key={selectedId} portfolioId={selectedId} holdings={holdings} onSaved={reload} />
+      <details className="optional-reference-prices"><summary>Optional manual reference price</summary><ManualPrices key={selectedId} portfolioId={selectedId} holdings={holdings} onSaved={reload} /></details>
     </>}
   </div>;
 }
