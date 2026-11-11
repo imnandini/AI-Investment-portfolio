@@ -41,8 +41,37 @@ describe("research flows", () => {
     await waitFor(() => expect((screen.getByRole("button", { name: "Start review" }) as HTMLButtonElement).disabled).toBe(false));
     await userEvent.click(screen.getByRole("button", { name: "Start review" }));
     await screen.findByText("Saved report");
+    expect(screen.getByText(/older document-based format/)).toBeTruthy();
     expect(screen.getByText("Price data missing")).toBeTruthy();
     expect(launchReview).toHaveBeenCalledWith("p1");
+  });
+  it("shows a saved news review without requiring uploaded documents", async () => {
+    vi.mocked(apiGet).mockResolvedValue([{ id: "p1", name: "My portfolio" }]);
+    vi.mocked(getReviews).mockResolvedValue([]);
+    vi.mocked(launchReview).mockResolvedValue({ id: "r2", portfolio_id: "p1", status: "partial", created_at: "2026-11-11T10:00:00Z", report: {
+      methodology_version: "portfolio-review-v2", summary: "Acme concentration deserves attention", analytics: { methodology: "Saved calculations" },
+      findings: [{ title: "Price sensitivity", text: "A 10% fall in Acme would reduce this basket by about 6.67%.", basis: "calculation", evidence_indices: [], source_ids: [] }],
+      evidence: [], limitations: ["Sector data is incomplete"], follow_up_questions: ["Does Acme match your intended exposure?"], activities: ["Checked news"],
+      coverage: { total_positions: 100, eligible_positions: 100, selected_positions: 20, checked_positions: 20, positions_with_news: 18, positions_without_news: 2, unreviewed_positions: 80, excluded_positions: 0, checked_weight_pct: "65.00", weight_basis: "market value", article_count: 25, selection_policy: "Largest holdings first, up to 20." },
+      company_reviews: [{ name: "Acme Limited", symbol: "AAA", exchange: "NSE", is_fund: false, weight_pct: "66.67", weight_basis: "market value", unrealized_return_pct: "10.00", price_as_of: "2026-11-10T00:00:00Z", view: "Recent Acme developments", portfolio_impact: "Acme drives much of this portfolio's exposure.", positive_signals: [], concern_signals: [], news: {
+        status: "available", checked_at: "2026-11-11T09:00:00Z", provider: "Test news", cached: false, note: "Matched headlines",
+        articles: [{ id: "n1", title: "Acme reports quarterly results", url: "https://example.org/results", publisher: "Example News", published_at: "2026-11-10T09:00:00Z" }],
+      } }],
+    } } as never);
+    render(<PortfolioReviewPage />);
+    await waitFor(() => expect((screen.getByRole("button", { name: "Start review" }) as HTMLButtonElement).disabled).toBe(false));
+    await userEvent.click(screen.getByRole("button", { name: "Start review" }));
+    await screen.findByText("Acme concentration deserves attention");
+    expect(screen.getByText(/100 positions calculated · 20 \/ 100/)).toBeTruthy();
+    expect(screen.getByText(/80 listed holdings were not news-checked/)).toBeTruthy();
+    expect(screen.getByText(/A 10% fall in Acme.*6\.67%/)).toBeTruthy();
+    const source = screen.getByRole("link", { name: "Acme reports quarterly results" });
+    expect(source.getAttribute("href")).toBe("https://example.org/results");
+    expect(source.getAttribute("rel")).toContain("noopener");
+    expect(screen.getByText(/Example News · Published/)).toBeTruthy();
+    expect(screen.queryByText("No supporting passages found.")).toBeNull();
+    expect(screen.queryByText(/older document-based format/)).toBeNull();
+    expect(screen.getByText(/Documents are optional/)).toBeTruthy();
   });
   it("opens named INDmoney research without treating its internal code as an exchange ticker", async () => {
     window.history.replaceState({}, "", "/research?holding=INDS00001&name=Synthetic%20Company");

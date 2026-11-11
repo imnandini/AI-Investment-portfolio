@@ -44,9 +44,9 @@ test("account, holdings, source search, chat and saved review", async ({ page })
   await expect(page.getByText(/Relevant source passages:/)).toBeVisible();
   await page.getByRole("link", { name: "Portfolio reviews", exact: true }).click();
   await page.getByRole("button", { name: "Start review" }).click();
-  await expect(page.getByRole("heading", { name: "Portfolio structure and source excerpts for research follow-up." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /concentration deserves attention/ })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Portfolio structure and source excerpts for research follow-up." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /concentration deserves attention/ })).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: "../evaluation/reports/review-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });

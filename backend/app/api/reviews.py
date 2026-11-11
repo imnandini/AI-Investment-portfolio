@@ -19,15 +19,15 @@ def serialize(review):
 
 
 @router.post("", status_code=201)
-def launch_review(portfolio_id: UUID, session: DB, user: CurrentUser, settings: Annotated[Settings, Depends(get_settings)]):
+async def launch_review(portfolio_id: UUID, session: DB, user: CurrentUser, settings: Annotated[Settings, Depends(get_settings)]):
     require_portfolio(session, user.id, portfolio_id)
     review = PortfolioReview(user_id=user.id, portfolio_id=portfolio_id, status="running")
     session.add(review)
     session.commit()
     try:
-        result = build_review_graph(session, settings).invoke({"user_id": str(user.id), "portfolio_id": str(portfolio_id)}, {"recursion_limit": 10})
+        result = await build_review_graph(session, settings).ainvoke({"user_id": str(user.id), "portfolio_id": str(portfolio_id)}, {"recursion_limit": 10})
         review.report = result["report"]
-        review.status = "complete" if not review.report["limitations"] else "partial"
+        review.status = review.report["assessment_status"]
     except Exception:
         session.rollback()
         review.status = "failed"

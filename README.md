@@ -16,7 +16,7 @@ The application combines exact portfolio calculations, public news, private docu
 | Stock briefs | One-click **Pros, cons & news**: recent headlines, source-linked signals, why they matter, what to check next, and the holding's portfolio context. |
 | Portfolio opinion | A one-click view of single-name concentration, known sector exposure, missing data and company news. |
 | Private document research | Upload company reports, search relevant passages, and inspect page-level citations and original source links. |
-| Saved portfolio reviews | A bounded LangGraph workflow that calculates metrics, selects research targets, retrieves evidence and saves a report. |
+| Saved portfolio reviews | A bounded LangGraph workflow that assesses all holdings, checks recent news for up to 20 largest listed holdings, adds optional document evidence and saves a source-linked report with explicit coverage. |
 | Portfolio chat | Ask about overall portfolio health, allocation, saved gain/loss and recent company news. Uploaded documents are optional extra evidence. |
 | Read-only MCP | Typed tools for application research workflows, plus a separate official INDmoney connection. |
 
@@ -179,6 +179,8 @@ Open **http://127.0.0.1:5173**. For INDmoney in native development, set `INDMONE
 | `POSTGRES_PORT` | Host port exposed by the local Docker database. |
 
 No model or news API key is required for the default stock briefs, portfolio opinion or extractive research workflow.
+
+Saved reviews also check company news automatically, without requiring uploaded reports. They assess every saved holding and show the scope of their bounded news sample. See [saved portfolio assessments and coverage](docs/portfolio_reviews.md).
 
 ## Verification
 

@@ -21,6 +21,14 @@ from app.models.user import User
 from app.middleware.security import SecurityMiddleware
 
 
+@pytest.fixture(autouse=True)
+def offline_saved_review_news(monkeypatch):
+    """Saved-review tests never depend on a live public feed."""
+    async def unavailable(*args):
+        return {"status": "unavailable", "articles": [], "checked_at": "2026-11-11T00:00:00+00:00", "note": "News unavailable in this isolated test."}
+    monkeypatch.setattr("app.agents.portfolio_review.nodes.company_news", unavailable)
+
+
 @pytest.fixture
 def db_session() -> Iterator[Session]:
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
