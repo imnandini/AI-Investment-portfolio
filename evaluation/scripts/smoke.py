@@ -2,6 +2,7 @@
 import asyncio
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import sys
 from uuid import uuid4
@@ -15,10 +16,13 @@ async def run():
     base = "http://127.0.0.1:8000"
     checks = {}
     with httpx.Client(base_url=base, timeout=30, trust_env=False) as api:
-        email = f"synthetic-smoke-{uuid4().hex}@example.com"
-        password = "synthetic-smoke-password-only"
-        api.post("/auth/register", json={"email": email, "password": password}).raise_for_status()
-        token = api.post("/auth/login", json={"email": email, "password": password}).json()["access_token"]
+        email = os.environ.get("SMOKE_EMAIL", "")
+        password = os.environ.get("SMOKE_PASSWORD", "")
+        if not email or not password:
+            raise RuntimeError("Set SMOKE_EMAIL and SMOKE_PASSWORD to a disposable, email-verified account. This check deletes that account.")
+        login = api.post("/auth/login", json={"email": email, "password": password})
+        login.raise_for_status()
+        token = login.json()["access_token"]
         api.headers["Authorization"] = "Bearer " + token
         try:
             portfolio = api.post("/portfolios", json={"name": "SYNTHETIC smoke portfolio", "base_currency": "INR"}).json()

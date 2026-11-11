@@ -1,11 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { apiGet, apiPost, type TokenResponse, type User } from "../services/api";
+import { apiGet, apiPost, type TokenResponse, type User, type VerificationResponse } from "../services/api";
 
 type AuthContextValue = {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, confirmPassword: string) => Promise<VerificationResponse>;
+  verifyEmail: (email: string, password: string, code: string) => Promise<void>;
+  resendVerification: (email: string, password: string) => Promise<VerificationResponse>;
   signOut: () => void;
 };
 
@@ -38,17 +40,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await acceptToken(token.access_token);
   }, [acceptToken]);
 
-  const register = useCallback(async (email: string, password: string) => {
-    await apiPost<User>("/auth/register", { email, password });
-    await signIn(email, password);
-  }, [signIn]);
+  const register = useCallback((email: string, password: string, confirmPassword: string) =>
+    apiPost<VerificationResponse>("/auth/register", { email, password, confirm_password: confirmPassword }), []);
+
+  const resendVerification = useCallback((email: string, password: string) =>
+    apiPost<VerificationResponse>("/auth/resend-verification", { email, password }), []);
+
+  const verifyEmail = useCallback(async (email: string, password: string, code: string) => {
+    const token = await apiPost<TokenResponse>("/auth/verify-email", { email, password, code });
+    await acceptToken(token.access_token);
+  }, [acceptToken]);
 
   const signOut = useCallback(() => {
     sessionStorage.removeItem("northstar_access_token");
     setUser(null);
   }, []);
 
-  return <AuthContext.Provider value={{ user, loading, signIn, register, signOut }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, signIn, register, verifyEmail, resendVerification, signOut }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

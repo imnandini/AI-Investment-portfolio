@@ -11,6 +11,7 @@ class DuplicateEmailError(Exception):
 
 
 def register_user(session: Session, email: str, password: str) -> User:
+    """Stage an unverified account; the caller commits after email delivery."""
     normalized_email = email.strip().lower()
     if session.scalar(select(User.id).where(User.email == normalized_email)) is not None:
         raise DuplicateEmailError
@@ -18,11 +19,10 @@ def register_user(session: Session, email: str, password: str) -> User:
     user = User(email=normalized_email, password_hash=hash_password(password))
     session.add(user)
     try:
-        session.commit()
+        session.flush()
     except IntegrityError as exc:
         session.rollback()
         raise DuplicateEmailError from exc
-    session.refresh(user)
     return user
 
 

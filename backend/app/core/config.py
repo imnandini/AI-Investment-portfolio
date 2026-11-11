@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     database_echo: bool = False
     secret_key: str = "local-development-key-change-before-production"
     access_token_expire_minutes: int = 30
+    email_verification_required: bool = True
+    smtp_host: str = ""
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    smtp_security: Literal["starttls", "ssl"] = "starttls"
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
     financial_data_provider: str = "none"
     financial_data_timeout_seconds: float = 5.0

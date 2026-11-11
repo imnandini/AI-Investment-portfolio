@@ -2,9 +2,10 @@ import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 
 let disposableEmail = "";
+const disposablePassword = process.env.E2E_PASSWORD || "";
 test.afterEach(async ({ request }) => {
   if (!disposableEmail) return;
-  const login = await request.post("/api/auth/login", { data: { email: disposableEmail, password: "synthetic-e2e-password-2026" } });
+  const login = await request.post("/api/auth/login", { data: { email: disposableEmail, password: disposablePassword } });
   if (login.ok()) {
     const { access_token } = await login.json();
     await request.delete("/api/auth/me", { headers: { Authorization: `Bearer ${access_token}` } });
@@ -12,13 +13,13 @@ test.afterEach(async ({ request }) => {
 });
 
 test("account, holdings, source search, chat and saved review", async ({ page }) => {
-  const email = `e2e-${Date.now()}@example.com`;
+  test.skip(!process.env.E2E_EMAIL || !disposablePassword, "Set E2E_EMAIL and E2E_PASSWORD to a disposable, email-verified account. This test deletes that account.");
+  const email = process.env.E2E_EMAIL!;
   disposableEmail = email;
   await page.goto("/portfolios");
-  await page.getByRole("button", { name: /Create an account/i }).click();
   await page.getByLabel(/Email/i).fill(email);
-  await page.getByLabel(/Password/i).fill("synthetic-e2e-password-2026");
-  await page.getByRole("button", { name: /Create account/i, exact: true }).click();
+  await page.getByLabel("Password", { exact: true }).fill(disposablePassword);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.getByRole("region", { name: "Portfolio overview" })).toBeVisible();
   await page.getByRole("button", { name: "Create portfolio", exact: true }).click();
   await page.getByLabel("Portfolio name").fill("SYNTHETIC demo portfolio");

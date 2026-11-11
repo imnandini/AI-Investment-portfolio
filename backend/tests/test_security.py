@@ -24,9 +24,13 @@ def test_limits_headers_and_log_privacy(caplog):
     assert "/items/{item_id}" in logs
 
 
-def test_registration_login_and_cross_user_writes(api_context):
+def test_registration_login_and_cross_user_writes(api_context, monkeypatch):
     client, owner, portfolio, headers, session = api_context
-    assert client.post("/auth/register", json={"email": "new@example.com", "password": "long-test-password"}).status_code == 201
+    codes = []
+    monkeypatch.setattr("app.services.email_verification.send_verification_email", lambda email, code, settings: codes.append(code))
+    assert client.post("/auth/register", json={"email": "new@example.com", "password": "long-test-password", "confirm_password": "long-test-password"}).status_code == 201
+    assert client.post("/auth/login", json={"email": "new@example.com", "password": "long-test-password"}).status_code == 403
+    assert client.post("/auth/verify-email", json={"email": "new@example.com", "password": "long-test-password", "code": codes[0]}).status_code == 200
     login = client.post("/auth/login", json={"email": "new@example.com", "password": "long-test-password"})
     assert login.status_code == 200
     other_headers = {"Authorization": "Bearer " + login.json()["access_token"]}

@@ -38,6 +38,27 @@ docker compose up -d --build
 
 Open **http://127.0.0.1:8080**. Create an account or sign in, then open **Portfolios**. The backend applies database migrations during startup. Keep an existing `.env` and its INDmoney encryption key stable across rebuilds.
 
+### Email verification setup
+
+Email verification can be paused with `EMAIL_VERIFICATION_REQUIRED=false` in the root `.env`. In that mode, registration still requires matching passwords and offers show/hide buttons, then signs the user in without sending email. Existing accounts can also sign in. Accounts are not marked email-verified. To resume verification, configure SMTP and set `EMAIL_VERIFICATION_REQUIRED=true`, then rebuild/restart the backend and frontend. Verification is required by default.
+
+Registration requires matching password and confirmation fields (12–128 characters). Both fields are masked initially and have independent show/hide buttons. After registration, enter the six-digit code sent to your email before accessing the app. Codes expire after 10 minutes, allow five attempts, and can be resent after 60 seconds. Existing accounts also need to verify their email on their next sign-in; select **Send a new code** when prompted. Unverified accounts cannot use portfolio APIs, including with previously issued tokens.
+
+Configure the sending mailbox in the root `.env` before starting the updated backend:
+
+```dotenv
+SMTP_HOST=smtp.your-provider.com
+SMTP_PORT=587
+SMTP_SECURITY=starttls
+SMTP_USERNAME=your-sending-email@example.com
+SMTP_PASSWORD=your-provider-smtp-password
+SMTP_FROM_EMAIL=your-sending-email@example.com
+```
+
+Use the SMTP details supplied by your email provider. `SMTP_FROM_EMAIL` must be an address your provider permits you to send from. Providers may require an app password or a dedicated SMTP credential. For implicit TLS use `SMTP_SECURITY=ssl` and the provider's port (usually 465). Connections verify TLS certificates. Credentials stay in the ignored `.env` file. Docker Compose passes these settings to the backend; after changes run `docker compose up -d --build backend frontend` (or restart the native backend).
+
+Missing settings or failed delivery produce a clear error and keep registration retryable. Codes are never included in API responses or application logs; only a keyed code hash is stored. SMTP delivery must be tested with your actual provider before relying on it for sign-ups.
+
 Useful local endpoints:
 
 | Address | Purpose |
@@ -198,6 +219,8 @@ npm run build
 ```
 
 Optional browser tests against a running local app:
+
+The complete browser scenario requires `E2E_EMAIL` and `E2E_PASSWORD` for a dedicated account whose email has already been verified. It deletes that disposable account when finished; use no personal or shared account. Without these variables, the scenario is skipped. The HTTP smoke script similarly requires `SMOKE_EMAIL` and `SMOKE_PASSWORD` for a verified disposable account and deletes it afterward. Authentication unit tests use a mocked email transport and cover registration, code validation and delivery failures without sending email.
 
 ```powershell
 npx playwright install chromium

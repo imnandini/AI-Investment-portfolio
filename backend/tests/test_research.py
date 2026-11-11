@@ -89,7 +89,7 @@ def test_document_and_review_user_boundaries_and_deletion(api_context):
     assert review.json()["report"]["findings"][0]["basis"] == "calculation"
     chat = client.post(f"/portfolios/{portfolio.id}/chat", headers=headers, json={"question": "revenue"})
     assert chat.json()["response"]["evidence"]
-    other = User(email="other-research@example.com", password_hash="unused")
+    other = User(email="other-research@example.com", password_hash="unused", email_verified=True)
     session.add(other); session.commit()
     other_headers = {"Authorization": "Bearer " + create_access_token(other.id, Settings(secret_key="test-secret-key-with-more-than-32-characters"))}
     assert client.get("/documents", headers=other_headers).json() == []

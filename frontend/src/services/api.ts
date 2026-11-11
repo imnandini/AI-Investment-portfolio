@@ -1,9 +1,10 @@
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 
-export type ApiError = Error & { status?: number };
+export type ApiError = Error & { status?: number; code?: string; retryAfter?: number };
+export type VerificationResponse = { message: string; verification_required: boolean; resend_after_seconds: number };
 export type HealthResponse = { status: string };
 
-export type User = { id: string; email: string; created_at: string };
+export type User = { id: string; email: string; email_verified: boolean; created_at: string };
 export type TokenResponse = { access_token: string; token_type: string; expires_in: number };
 export type Portfolio = { id: string; name: string; base_currency: string; created_at: string; updated_at: string };
 export type Instrument = { id: string; canonical_symbol: string; display_name?: string | null; exchange: string; asset_type: string; currency: string; sector: string | null };
@@ -49,13 +50,22 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   if (!response.ok) {
     let message = `The API returned ${response.status} ${response.statusText || "error"}.`;
+    let code: string | undefined;
     try {
       const body = await response.json() as { detail?: unknown };
       if (typeof body.detail === "string") message = body.detail;
       else if (Array.isArray(body.detail)) message = body.detail.map((item) => item.msg || "Invalid input").join(" ");
+      else if (body.detail && typeof body.detail === "object") {
+        const detail = body.detail as { message?: string; code?: string };
+        if (typeof detail.message === "string") message = detail.message;
+        if (typeof detail.code === "string") code = detail.code;
+      }
     } catch { /* Keep the HTTP status message when the response has no JSON body. */ }
     const error = new Error(message) as ApiError;
     error.status = response.status;
+    error.code = code;
+    const retryAfter = Number(response.headers.get("Retry-After"));
+    if (retryAfter > 0) error.retryAfter = retryAfter;
     throw error;
   }
   if (response.status === 204) return undefined as T;

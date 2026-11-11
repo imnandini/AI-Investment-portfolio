@@ -45,8 +45,8 @@ def db_session() -> Iterator[Session]:
 
 @pytest.fixture
 def api_context(db_session: Session):
-    settings = Settings(secret_key="test-secret-key-with-more-than-32-characters", daily_price_provider="none")
-    user = User(email="owner@example.com", password_hash="unused")
+    settings = Settings(secret_key="test-secret-key-with-more-than-32-characters", daily_price_provider="none", email_verification_required=True)
+    user = User(email="owner@example.com", password_hash="unused", email_verified=True)
     db_session.add(user)
     db_session.flush()
     portfolio = Portfolio(user_id=user.id, name="Long-term", base_currency="INR")
