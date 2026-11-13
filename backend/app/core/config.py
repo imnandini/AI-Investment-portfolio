@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     financial_data_provider: str = "none"
     financial_data_timeout_seconds: float = 5.0
     daily_price_provider: Literal["yahoo", "none"] = "none"
+    company_research_provider: Literal["yahoo", "none"] = "none"
     embedding_provider: Literal["hash", "sentence_transformers", "none"] = "hash"
     embedding_model_path: str = ""
     reranker_model_path: str = ""

@@ -16,6 +16,7 @@ The application combines exact portfolio calculations, public news, private docu
 | Stock briefs | One-click **Pros, cons & news**: recent headlines, source-linked signals, why they matter, what to check next, and the holding's portfolio context. |
 | Portfolio opinion | A one-click view of single-name concentration, known sector exposure, missing data and company news. |
 | Private document research | Upload company reports, search relevant passages, and inspect page-level citations and original source links. |
+| Company financials | Search Indian companies by name/ticker or paste a Screener company URL; view Yahoo Finance metrics and statements, with a Screener comparison link. No PDF required. Personal-use opt-in. |
 | Saved portfolio reviews | A bounded LangGraph workflow that assesses all holdings, checks recent news for up to 20 largest listed holdings, adds optional document evidence and saves a source-linked report with explicit coverage. |
 | Portfolio chat | Ask about overall portfolio health, allocation, saved gain/loss and recent company news. Uploaded documents are optional extra evidence. |
 | Read-only MCP | Typed tools for application research workflows, plus a separate official INDmoney connection. |
@@ -133,7 +134,11 @@ Use **Research** beside a holding to open its document workspace. The holding re
 
 Upload text PDFs you are entitled to use, up to 5 MB and 100 pages each. Search answers quote relevant passages with document/page citations. Originals are processed in memory; extracted text and metadata are stored privately. Scanned, encrypted, malformed or unsupported files receive explicit status messages.
 
-**Search web sources** opens an external search. Those pages are not automatically ingested into the private library. Company lookup requires a verified exchange ticker and a configured authorized data provider; an internal INDmoney code is not a verified ticker.
+**Company lookup** accepts a company name, ticker or Screener company URL. With `COMPANY_RESEARCH_PROVIDER=yahoo`, choose an NSE/BSE company from search results to see valuation ratios, revenue, profit, debt, cash flow and up to four annual/quarterly statement periods where supplied. Saved holdings open the same workspace; internal INDmoney references are never treated as exchange tickers. No report upload or paid API key is needed for this personal-use feature.
+
+Figures come from Yahoo Finance via yfinance. **Compare on Screener** opens Screener separately. A pasted Screener link identifies a ticker; its page is not copied or ingested. Fetch time, price time, statement dates, missing values and reporting limits remain visible. Yahoo reporting periods/basis may differ from Screener consolidated figures. Fundamentals are cached for six hours and do not change portfolio prices, document answers or saved reviews. Detailed accounting notes, risks and auditor commentary still require company filings. See [company research](docs/company_research.md).
+
+**Search web sources** opens an external search. Those pages are not automatically ingested into the private library.
 
 The default retrieval implementation uses lexical/hash vectors and extractive answers. Optional local semantic embeddings and reranking require separately provisioned models. See the [research pipeline](docs/rag_pipeline.md).
 
@@ -153,7 +158,7 @@ Enable `DAILY_PRICE_PROVIDER=yahoo` in the root `.env` for this personal app's a
 
 Manual reference prices remain available in a collapsed optional section. A newer automatic close replaces an old manual reference; newer dated manual/imported prices can still supply the current valuation. Prices older than seven days, prices with no timestamp, and currency-mismatched prices are excluded from aggregate market metrics. There is no inferred FX conversion, estimated missing price or zero-filled missing purchase cost. PF account balances stay separate from security calculations.
 
-Daily pricing is an unofficial Yahoo/yfinance personal-use integration and can be delayed or unavailable. Company fundamentals/profile lookup still has no licensed provider enabled. Public news availability does not establish complete financial fundamentals or a current valuation.
+Daily pricing and opt-in company financial research use unofficial Yahoo/yfinance personal-use integrations and can be delayed or unavailable. The legacy licensed-provider profile/quote endpoints remain unconfigured. Public news availability does not establish complete financial fundamentals or a current valuation.
 
 ## Native development
 

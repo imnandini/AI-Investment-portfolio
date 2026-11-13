@@ -79,7 +79,7 @@ describe("research flows", () => {
     vi.mocked(apiPost).mockResolvedValue({ answer: "Insufficient evidence.", evidence: [], limitations: [] });
     render(<CompanyResearchPage />);
     expect(screen.getByRole("heading", { name: "Synthetic Company" })).toBeTruthy();
-    expect((screen.getByLabelText("Symbol") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("Company name, ticker or Screener URL") as HTMLInputElement).value).toBe("Synthetic Company");
     expect((screen.getByLabelText("Company / ticker") as HTMLInputElement).value).toBe("INDS00001");
     expect((screen.getByLabelText("Company filter") as HTMLInputElement).value).toBe("INDS00001");
     expect(screen.getByRole("link", { name: "Search web sources" }).getAttribute("href")).toContain("Synthetic%20Company");

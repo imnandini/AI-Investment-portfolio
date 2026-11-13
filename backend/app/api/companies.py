@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.api.auth import CurrentUser
@@ -9,8 +9,25 @@ from app.db.session import get_session
 from app.models.document import Document
 from app.schemas.research import DocumentRead
 from app.services.market_data import cached_lookup
+from app.services.company_research import company_snapshot, search_companies
+from app.schemas.company_research import CompanySearch, CompanySnapshot
 
 router = APIRouter(prefix="/companies", tags=["company research"])
+
+
+@router.get("/search", response_model=CompanySearch)
+async def company_search(user: CurrentUser,
+    settings: Annotated[Settings, Depends(get_settings)],
+    q: Annotated[str, Query(min_length=2, max_length=200)]):
+    return await search_companies(q, settings)
+
+
+@router.get("/{symbol}/snapshot", response_model=CompanySnapshot)
+async def read_company_snapshot(
+    symbol: Annotated[str, Path(min_length=1, max_length=32, pattern=r"^[A-Za-z0-9&._-]+$")],
+    exchange: Annotated[str, Query(pattern=r"^(NSE|BSE)$")], user: CurrentUser,
+    session: Annotated[Session, Depends(get_session)], settings: Annotated[Settings, Depends(get_settings)]):
+    return await company_snapshot(session, settings, symbol, exchange)
 
 
 @router.get("/{symbol}")
